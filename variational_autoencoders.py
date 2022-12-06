@@ -1,28 +1,65 @@
 import torch; torch.manual_seed(0)
-import torch.nn as nn
-import torch.nn.functional as F
+from PIL import Image
 import torch.utils
 import torch.distributions
 import torchvision
 import numpy as np
+from autoencoder_models import *
+from tqdm import tqdm
+from torch.utils.tensorboard import SummaryWriter
 import matplotlib.pyplot as plt; plt.rcParams['figure.dpi'] = 200
 
+# define some variables
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-def train(autoencoder, data, epochs=20):
-    opt = torch.optim.Adam(autoencoder.parameters())
-    for epoch in range(epochs):
-        for x, y in data:
-            x = x.to(device) # GPU
-            opt.zero_grad()
-            x_hat = autoencoder(x)
-            loss = ((x - x_hat)**2).sum()
-            loss.backward()
-            opt.step()
-    return autoencoder
 latent_dims = 2
+writer = SummaryWriter()
+
+
+def train(autoencoder, data, epochs=20, variational=False):
+    """
+    A function to train the (variational) Autoencoder. If you want to train the VAE, set vaitational to True
+    :param autoencoder: Neural Net, subclassed from nn.Moudle
+    :param data: data in format x,y (input, class)
+    :param epochs: numer of epochs
+    :param variational: Boolean, if true we add KL divergence term to loss
+    :return:
+    """
+    opt = torch.optim.Adam(autoencoder.parameters())
+    running_loss = 0.0
+    for epoch in range(epochs):
+        with tqdm(data, unit="batch") as tdata:
+            for x, y in tdata:
+                # set model to train mode
+                autoencoder.train()
+                x = x.to(device) # GPU
+                opt.zero_grad()
+                x_hat = autoencoder(x)
+                if variational:
+                    loss = ((x - x_hat) ** 2).sum() + autoencoder.encoder.kl
+                else:
+                    loss = ((x - x_hat)**2).sum()
+                ## add Losses and accuracy measures to tensorpoard
+                writer.add_scalar('Loss/train', loss, epoch)
+                #writer.add_scalar('Accuracy/train', np.random.random(), n_iter)
+                loss.backward()
+                opt.step()
+
+                # add to running loss
+                running_loss += loss.item()
+
+                # now pass validation data
+                # evaluate model:
+                autoencoder.eval()
+                with torch.no_grad():
+                    out_data = autoencoder(data)
+
+    return autoencoder
+
+
+
 autoencoder = Autoencoder(latent_dims).to(device) # GPU
 
+# use MNST Dataset
 data = torch.utils.data.DataLoader(
         torchvision.datasets.MNIST('./data',
                transform=torchvision.transforms.ToTensor(),
@@ -31,6 +68,7 @@ data = torch.utils.data.DataLoader(
         shuffle=True)
 
 autoencoder = train(autoencoder, data)
+
 def plot_latent(autoencoder, data, num_batches=100):
     for i, (x, y) in enumerate(data):
         z = autoencoder.encoder(x.to(device))
@@ -39,6 +77,7 @@ def plot_latent(autoencoder, data, num_batches=100):
         if i > num_batches:
             plt.colorbar()
             break
+
 def plot_reconstructed(autoencoder, r0=(-5, 10), r1=(-10, 5), n=12):
     w = 28
     img = np.zeros((n*w, n*w))
@@ -51,48 +90,10 @@ def plot_reconstructed(autoencoder, r0=(-5, 10), r1=(-10, 5), n=12):
     plt.imshow(img, extent=[*r0, *r1])
 plot_reconstructed(autoencoder)
 
-class VariationalEncoder(nn.Module):
-    def __init__(self, latent_dims):
-        super(VariationalEncoder, self).__init__()
-        self.linear1 = nn.Linear(784, 512)
-        self.linear2 = nn.Linear(512, latent_dims)
-        self.linear3 = nn.Linear(512, latent_dims)
 
-        self.N = torch.distributions.Normal(0, 1)
-        self.N.loc = self.N.loc.cuda() # hack to get sampling on the GPU
-        self.N.scale = self.N.scale.cuda()
-        self.kl = 0
 
-    def forward(self, x):
-        x = torch.flatten(x, start_dim=1)
-        x = F.relu(self.linear1(x))
-        mu =  self.linear2(x)
-        sigma = torch.exp(self.linear3(x))
-        z = mu + sigma*self.N.sample(mu.shape)
-        self.kl = (sigma**2 + mu**2 - torch.log(sigma) - 1/2).sum()
-        return z
-class VariationalAutoencoder(nn.Module):
-    def __init__(self, latent_dims):
-        super(VariationalAutoencoder, self).__init__()
-        self.encoder = VariationalEncoder(latent_dims)
-        self.decoder = Decoder(latent_dims)
-
-    def forward(self, x):
-        z = self.encoder(x)
-        return self.decoder(z)
-def train(autoencoder, data, epochs=20):
-    opt = torch.optim.Adam(autoencoder.parameters())
-    for epoch in range(epochs):
-        for x, y in data:
-            x = x.to(device) # GPU
-            opt.zero_grad()
-            x_hat = autoencoder(x)
-            loss = ((x - x_hat)**2).sum() + autoencoder.encoder.kl
-            loss.backward()
-            opt.step()
-    return autoencoder
 vae = VariationalAutoencoder(latent_dims).to(device) # GPU
-vae = train(vae, data)
+vae = train(vae, data, variational=True)
 plot_latent(vae, data)
 
 plot_reconstructed(vae, r0=(-3, 3), r1=(-3, 3))
@@ -118,7 +119,6 @@ interpolate(vae, x_1, x_2, n=20)
 
 interpolate(autoencoder, x_1, x_2, n=20)
 
-from PIL import Image
 
 def interpolate_gif(autoencoder, filename, x_1, x_2, n=100):
     z_1 = autoencoder.encoder(x_1)
@@ -138,3 +138,25 @@ def interpolate_gif(autoencoder, filename, x_1, x_2, n=100):
         append_images=images_list[1:],
         loop=1)
 interpolate_gif(vae, "vae", x_1, x_2)
+
+
+
+def main(train_test_split=0.8):
+    # use MNIST Dataset and load training and test data
+    training_data = torchvision.datasets.MNIST(root='./data', transform=torchvision.transforms.ToTensor(), train=True, download=True)
+
+    test_data = torch.utils.data.DataLoader(
+        torchvision.datasets.MNIST(root='./data', transform=torchvision.transforms.ToTensor(), train=False, download=True),
+        batch_size=128,
+        shuffle=True
+    )
+
+    train_size = int(train_test_split * len(training_data))
+    val_size = len(training_data) - train_size
+    train_set, val_set = torch.utils.data.random_split(training_data, [train_size, val_size])
+
+    # Load data into torch Dataloader
+    train_set = torch.utils.data.DataLoader(train_set, batch_size=128, shuffle=True)
+    val_set = torch.utils.data.DataLoader(val_set, batch_size=128, shuffle=True)
+
+
