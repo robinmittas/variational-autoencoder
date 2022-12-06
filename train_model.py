@@ -4,59 +4,75 @@ import torch.utils
 import torch.distributions
 import torchvision
 import numpy as np
-from autoencoder_models import *
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 import matplotlib.pyplot as plt; plt.rcParams['figure.dpi'] = 200
+from models.linear_variational_autoencoder import *
+from models.linear_autoencoder import *
+import os
+import yaml
 
-# define some variables
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-latent_dims = 2
-writer = SummaryWriter()
 
 
-def train(autoencoder, data, epochs=20, variational=False):
+def train(autoencoder, training_data, validation_data, epochs=20, kld_loss_weight=0.00025):
     """
     A function to train the (variational) Autoencoder. If you want to train the VAE, set vaitational to True
     :param autoencoder: Neural Net, subclassed from nn.Moudle
-    :param data: data in format x,y (input, class)
+    :param training_data: data in format x,y (input, class)
     :param epochs: numer of epochs
     :param variational: Boolean, if true we add KL divergence term to loss
     :return:
     """
     opt = torch.optim.Adam(autoencoder.parameters())
-    running_loss = 0.0
     for epoch in range(epochs):
-        with tqdm(data, unit="batch") as tdata:
+        running_loss = 0.0
+        loss_epoch = []
+        with tqdm(training_data, unit="batch") as tdata:
             for x, y in tdata:
                 # set model to train mode
                 autoencoder.train()
                 x = x.to(device) # GPU
                 opt.zero_grad()
-                x_hat = autoencoder(x)
-                if variational:
-                    loss = ((x - x_hat) ** 2).sum() + autoencoder.encoder.kl
-                else:
-                    loss = ((x - x_hat)**2).sum()
+                x_hat, x, mu, log_sigma = autoencoder(x)
+                # TODO Hyperparameter kld loss weight!!!
+                loss = autoencoder.loss(reconstruction=x_hat, input=x, mu=mu, log_sigma=log_sigma, kld_loss_weight=kld_loss_weight)
+                # add loss per batch to list
+                loss_epoch.append(loss["loss"].item())
                 ## add Losses and accuracy measures to tensorpoard
-                writer.add_scalar('Loss/train', loss, epoch)
-                #writer.add_scalar('Accuracy/train', np.random.random(), n_iter)
-                loss.backward()
+                writer.add_scalar('Loss/train', loss["loss"], epoch)
+                writer.add_scalar('Loss/KLD', loss["KLD"], epoch)
+                writer.add_scalar('Loss/reconstruction_loss', loss["reconstruction_loss"], epoch)
+
+                loss["loss"].backward()
                 opt.step()
 
                 # add to running loss
-                running_loss += loss.item()
+                running_loss += loss["loss"].item()
 
-                # now pass validation data
-                # evaluate model:
-                autoencoder.eval()
-                with torch.no_grad():
-                    out_data = autoencoder(data)
+            final_loss = np.mean(loss_epoch)
+            writer.add_scalar('Loss/epoch_loss', loss["reconstruction_loss"], epoch)
 
+        # evaluate model - validation
+        #eval_loss = evaluate_model(autoencoder, validation_data)
+        #print(eval_loss)
+        print("RUNNING LOSS:", running_loss)
     return autoencoder
 
+def evaluate_model(model, validation_data):
+    with torch.no_grad():
+        model.eval()
+        model.to(device)
+        criterion = torch.nn.MSELoss()
+        loss = 0
+        for x,y in validation_data:
+            x_hat = model(x)
+            loss += criterion(
+                x_hat,
+                x
+            ).item()
+    return loss
 
-
+"""
 autoencoder = Autoencoder(latent_dims).to(device) # GPU
 
 # use MNST Dataset
@@ -68,7 +84,7 @@ data = torch.utils.data.DataLoader(
         shuffle=True)
 
 autoencoder = train(autoencoder, data)
-
+"""
 def plot_latent(autoencoder, data, num_batches=100):
     for i, (x, y) in enumerate(data):
         z = autoencoder.encoder(x.to(device))
@@ -88,6 +104,7 @@ def plot_reconstructed(autoencoder, r0=(-5, 10), r1=(-10, 5), n=12):
             x_hat = x_hat.reshape(28, 28).to('cpu').detach().numpy()
             img[(n-1-i)*w:(n-1-i+1)*w, j*w:(j+1)*w] = x_hat
     plt.imshow(img, extent=[*r0, *r1])
+"""
 plot_reconstructed(autoencoder)
 
 
@@ -138,10 +155,14 @@ def interpolate_gif(autoencoder, filename, x_1, x_2, n=100):
         append_images=images_list[1:],
         loop=1)
 interpolate_gif(vae, "vae", x_1, x_2)
+"""
 
 
-
-def main(train_test_split=0.8):
+def main(config_filename:str):
+    # get configs from file
+    # load config file
+    with open(config_filename, encoding='utf8') as conf:
+        config = yaml.load(conf, Loader=yaml.FullLoader)
     # use MNIST Dataset and load training and test data
     training_data = torchvision.datasets.MNIST(root='./data', transform=torchvision.transforms.ToTensor(), train=True, download=True)
 
@@ -151,7 +172,7 @@ def main(train_test_split=0.8):
         shuffle=True
     )
 
-    train_size = int(train_test_split * len(training_data))
+    train_size = int(config["train_test_split"] * len(training_data))
     val_size = len(training_data) - train_size
     train_set, val_set = torch.utils.data.random_split(training_data, [train_size, val_size])
 
@@ -159,4 +180,16 @@ def main(train_test_split=0.8):
     train_set = torch.utils.data.DataLoader(train_set, batch_size=128, shuffle=True)
     val_set = torch.utils.data.DataLoader(val_set, batch_size=128, shuffle=True)
 
+    vae = VariationalAutoencoder(config["latent_dimension"])
+    vae = train(vae, train_set, val_set, epochs=config["epochs"], kld_loss_weight=config["kld_loss_weight"])
+
+    return vae
+
+
+if __name__ == "__main__":
+    # define some variables
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    latent_dims = 2
+    writer = SummaryWriter("./logs_tensorboard/")
+    vae = main("configs/config_linear_variational_autoencoder.yaml")
 
