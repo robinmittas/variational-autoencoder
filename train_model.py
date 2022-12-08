@@ -13,10 +13,12 @@ import os
 import yaml
 
 
-
-def train(autoencoder, training_data, validation_data, epochs=20, kld_loss_weight=0.00025):
+def train(autoencoder, training_data, validation_data, epochs=20, kld_loss_weight: float =0.00025, plot_reconstructed:bool=True):
     """
     A function to train the (variational) Autoencoder. If you want to train the VAE, set vaitational to True
+    :param validation_data:
+    :param plot_reconstructed:
+    :param kld_loss_weight:
     :param autoencoder: Neural Net, subclassed from nn.Moudle
     :param training_data: data in format x,y (input, class)
     :param epochs: numer of epochs
@@ -34,14 +36,9 @@ def train(autoencoder, training_data, validation_data, epochs=20, kld_loss_weigh
                 x = x.to(device) # GPU
                 opt.zero_grad()
                 x_hat, x, mu, log_sigma = autoencoder(x)
-                # TODO Hyperparameter kld loss weight!!!
                 loss = autoencoder.loss(reconstruction=x_hat, input=x, mu=mu, log_sigma=log_sigma, kld_loss_weight=kld_loss_weight)
                 # add loss per batch to list
-                loss_epoch.append(loss["loss"].item())
-                ## add Losses and accuracy measures to tensorpoard
-                writer.add_scalar('Loss/train', loss["loss"], epoch)
-                writer.add_scalar('Loss/KLD', loss["KLD"], epoch)
-                writer.add_scalar('Loss/reconstruction_loss', loss["reconstruction_loss"], epoch)
+                loss_epoch.append(loss)
 
                 loss["loss"].backward()
                 opt.step()
@@ -49,28 +46,56 @@ def train(autoencoder, training_data, validation_data, epochs=20, kld_loss_weigh
                 # add to running loss
                 running_loss += loss["loss"].item()
 
-            final_loss = np.mean(loss_epoch)
-            writer.add_scalar('Loss/epoch_loss', loss["reconstruction_loss"], epoch)
+            #check validation metrics
+            loss_valid, x_hat_valid, x_valid, mu_valid, log_sigma_valid = evaluate_model(autoencoder, validation_data, epoch, plot_reconstructed)
 
-        # evaluate model - validation
-        #eval_loss = evaluate_model(autoencoder, validation_data)
-        #print(eval_loss)
-        print("RUNNING LOSS:", running_loss)
+            # get train loss metrics
+            epoch_loss = np.mean([batch["loss"].item() for batch in loss_epoch])
+            epoch_kld_loss = np.mean([batch["KLD"].item() for batch in loss_epoch])
+            epoch_reconstruction_loss = np.mean([batch["reconstruction_loss"].item() for batch in loss_epoch])
+
+            # get valid loss metrics
+            epoch_loss_valid = np.mean([batch["loss"].item() for batch in loss_valid])
+            epoch_kld_loss_valid = np.mean([batch["KLD"].item() for batch in loss_valid])
+            epoch_reconstruction_loss_valid = np.mean([batch["reconstruction_loss"].item() for batch in loss_valid])
+
+            ## add Losses and accuracy measures to tensorpoard
+            writer.add_scalar('Loss/train_loss', epoch_loss, epoch)
+            writer.add_scalar('Loss/train_KLD_loss', epoch_kld_loss, epoch)
+            writer.add_scalar('Loss/train_reconstruction_loss', epoch_reconstruction_loss, epoch)
+            writer.add_scalar('Loss/train_running_loss', running_loss, epoch)
+
+            ## add valid losses
+            writer.add_scalar('Loss/valid_loss', epoch_loss_valid, epoch)
+            writer.add_scalar('Loss/valid_KLD_loss', epoch_kld_loss_valid, epoch)
+            writer.add_scalar('Loss/valid_reconstruction_loss', epoch_reconstruction_loss_valid, epoch)
+
     return autoencoder
 
-def evaluate_model(model, validation_data):
+
+def evaluate_model(autoencoder, validation_data, epoch: int, plot_reconstructed: bool):
     with torch.no_grad():
-        model.eval()
-        model.to(device)
-        criterion = torch.nn.MSELoss()
-        loss = 0
+        autoencoder.eval()
+        autoencoder.to(device)
+        loss_epoch = []
         for x,y in validation_data:
-            x_hat = model(x)
-            loss += criterion(
-                x_hat,
-                x
-            ).item()
-    return loss
+            x_hat, x, mu, log_sigma = autoencoder(x)
+            loss = autoencoder.loss(reconstruction=x_hat, input=x, mu=mu, log_sigma=log_sigma,
+                                    kld_loss_weight=1)
+            # add loss per batch to list
+            loss_epoch.append(loss)
+
+        if plot_reconstructed:
+            # just for first epoch we log original image
+            if epoch == 0:
+                img_grid = torchvision.utils.make_grid(x)
+                writer.add_image(f'Original Images', img_grid)
+            # create grid of images
+            img_grid_reconstructed = torchvision.utils.make_grid(x_hat)
+            # Write the generated image to tensorboard
+            writer.add_image(f'Reconstructed Images Epoch {epoch}', img_grid_reconstructed)
+
+    return loss_epoch, x_hat, x, mu, log_sigma
 
 """
 autoencoder = Autoencoder(latent_dims).to(device) # GPU
@@ -93,7 +118,7 @@ def plot_latent(autoencoder, data, num_batches=100):
         if i > num_batches:
             plt.colorbar()
             break
-
+"""
 def plot_reconstructed(autoencoder, r0=(-5, 10), r1=(-10, 5), n=12):
     w = 28
     img = np.zeros((n*w, n*w))
@@ -104,7 +129,8 @@ def plot_reconstructed(autoencoder, r0=(-5, 10), r1=(-10, 5), n=12):
             x_hat = x_hat.reshape(28, 28).to('cpu').detach().numpy()
             img[(n-1-i)*w:(n-1-i+1)*w, j*w:(j+1)*w] = x_hat
     plt.imshow(img, extent=[*r0, *r1])
-"""
+
+
 plot_reconstructed(autoencoder)
 
 
@@ -158,7 +184,7 @@ interpolate_gif(vae, "vae", x_1, x_2)
 """
 
 
-def main(config_filename:str):
+def main(config_filename: str):
     # get configs from file
     # load config file
     with open(config_filename, encoding='utf8') as conf:
@@ -181,7 +207,12 @@ def main(config_filename:str):
     val_set = torch.utils.data.DataLoader(val_set, batch_size=128, shuffle=True)
 
     vae = VariationalAutoencoder(config["latent_dimension"])
-    vae = train(vae, train_set, val_set, epochs=config["epochs"], kld_loss_weight=config["kld_loss_weight"])
+    vae = train(vae,
+                train_set,
+                val_set,
+                epochs=config["epochs"],
+                kld_loss_weight=config["kld_loss_weight"],
+                plot_reconstructed=config["plot_reconstructed"])
 
     return vae
 
@@ -189,7 +220,40 @@ def main(config_filename:str):
 if __name__ == "__main__":
     # define some variables
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    latent_dims = 2
     writer = SummaryWriter("./logs_tensorboard/")
     vae = main("configs/config_linear_variational_autoencoder.yaml")
+    writer.flush()
+    writer.close()
 
+
+""""
+# run valid
+loss_epoch, x_hat, x, mu, log_sigma = evaluate_model(vae, val_set)
+
+
+plt.imshow(x_hat[11].permute(1,2,0))
+plt.imshow(x[11].permute(1,2,0))
+torchvision.utils.make_grid(x_hat)
+
+"""
+def plot_latent(autoencoder, data, num_batches=100):
+    for i, (x, y) in enumerate(data):
+        mu, sigma = vae.encoder(x.to(device))
+        #z = z.to('cpu').detach().numpy()
+        #plt.scatter(z[:, 0], z[:, 1], c=y, cmap='tab10')
+        if i > num_batches:
+            plt.colorbar()
+            break
+
+def plot_reconstructed(autoencoder, r0=(-10, 10), r1=(-10, 10), n=12):
+    w = 28
+    img = np.zeros((n*w, n*w))
+    for i, y in enumerate(np.linspace(*r1, n)):
+        for j, x in enumerate(np.linspace(*r0, n)):
+            z = torch.Tensor([[x, y]]).to(device)
+            x_hat = autoencoder.decoder(z)
+            x_hat = x_hat.reshape(28, 28).to('cpu').detach().numpy()
+            img[(n-1-i)*w:(n-1-i+1)*w, j*w:(j+1)*w] = x_hat
+    plt.imshow(img, extent=[*r0, *r1])
+
+plot_reconstructed(vae)

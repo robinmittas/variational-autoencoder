@@ -13,4 +13,10 @@ python -m venv venv/
 venv/Scripts/activate.bat # For windows users: venv\Scripts\activate.bat (in anaconda prompt)
 python -m pip install -r requirements.txt
 ```
-Depending on your IDE you can select the just created venv as Python Interpreter. 
+Depending on your IDE you can select the just created venv as Python Interpreter.
+
+2. Tensorboard
+```
+cd variational-autoencoder
+tensorboard --logdir=logs_tensorboard
+```
