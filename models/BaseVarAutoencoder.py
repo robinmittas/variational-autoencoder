@@ -31,11 +31,11 @@ class BaseVarAutoencoder(nn.Module):
         raise NotImplementedError
 
     @abstractmethod
-    def forward(self, *inputs: torch.Tensor) -> torch.Tensor:
+    def forward(self, *inputs: torch.Tensor) -> [torch.Tensor, ...]:
         pass
 
     @abstractmethod
-    def loss_function(self, *inputs: typing.Any, **kwargs) -> torch.Tensor:
+    def loss(self, *inputs: typing.Any, **kwargs) -> dict:
         pass
 
 
