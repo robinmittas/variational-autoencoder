@@ -86,10 +86,8 @@ def evaluate_model(autoencoder, validation_data, epoch: int, plot_reconstructed:
             loss_epoch.append(loss)
 
         if plot_reconstructed:
-            # just for first epoch we log original image
-            if epoch == 0:
-                img_grid = torchvision.utils.make_grid(x)
-                writer.add_image(f'Original Images', img_grid)
+            img_grid = torchvision.utils.make_grid(x)
+            writer.add_image(f'Original Images Epoch {epoch}', img_grid)
             # create grid of images
             img_grid_reconstructed = torchvision.utils.make_grid(x_hat)
             # Write the generated image to tensorboard

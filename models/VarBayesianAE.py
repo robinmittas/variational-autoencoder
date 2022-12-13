@@ -138,6 +138,7 @@ class VarBayesianDecoder(BaseDecoder):
                                      stride=(1, 1),
                                      padding=0)
         self.tanh = nn.Tanh()
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x: torch.Tensor) -> [torch.Tensor, ...]:
         """
@@ -150,7 +151,7 @@ class VarBayesianDecoder(BaseDecoder):
         out = out.view(-1, self.hidden_dim_first, self.linear_dim, self.linear_dim)
         out = self.decoder(out)
         out = self.final_layer(out)
-        return self.tanh(out)
+        return self.sigmoid(out)
 
 
 class VarBayesianAE(BaseVarAutoencoder):
@@ -203,7 +204,7 @@ class VarBayesianAE(BaseVarAutoencoder):
 
         reconstruction_loss = nn.functional.mse_loss(reconstruction, orig_input, reduction=kwargs["mse_reduction"])
         # for derivation of KL Term of two Std. Normals, see Appendix TODO!
-        KL_divergence_loss = torch.mean(-0.5 * torch.sum(1 + log_sigma - mu ** 2 - log_sigma.exp(), dim = 1), dim = 0)
+        KL_divergence_loss = torch.mean(-0.5 * torch.sum(1 + log_sigma - mu ** 2 - log_sigma.exp(), dim=1), dim=0)
         # Add a weight to KL divergence term as the loss otherwise is too much dominated by this term!
         # For Validation we set this to 1
         KL_divergence_weight = kwargs["KL_divergence_weight"]

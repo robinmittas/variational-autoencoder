@@ -4,3 +4,4 @@ __pycache__/
 logs_tensorboard/
 .idea/
 lightning_logs/
+sample_.py
