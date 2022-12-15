@@ -20,11 +20,14 @@ As a Dataset I have used the MNIST Dataset
 
 ![](plots/beta_1e-1_vae_sampled.png)
 
-5. σ-VA
+5. σ-VAE
 
-![](plots/sigma_vae_sampled.png)
+![](plots/sigma_vae_sampled_latent8.png)
 
+The following image illustrates the Latent Space distribution for a σ-VAE with 2-dimensional Latent Space. 
+The image on the top right is a decoded Image of the sample (-1,1), the top right displays the decoded Image of the latent vector (1,1).
 
+![](plots/2d_latent_space.png)
 
 ### How to use this repository:
 1. Create venv

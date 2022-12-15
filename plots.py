@@ -63,13 +63,45 @@ def plot_from_distribution(model,
     plt.show()
 
 
+def plot_2d_latent_space(autoencoder, r0=(-1, 1), r1=(-1, 1), n=50, input_dimension=[1, 28, 28]):
+    """
+    :param autoencoder:
+    :param r0: borders for drawing from latent space
+    :param r1: borders for drawing from latent space
+    :param n: nxn grid
+    :param input_dimension: input dimension of one image
+    :return:
+    """
+    latent_space = torch.empty(n, n, input_dimension[0], input_dimension[1], input_dimension[2])
+    for i, y in enumerate(np.linspace(*r1, n)):
+        for j, x in enumerate(np.linspace(*r0, n)):
+            z = torch.Tensor([[x, y]])#.to(device)
+            latent_space[i, j] = autoencoder.decoder(z)
+    latent_space = latent_space.cpu().data.view(-1, input_dimension[0], input_dimension[1], input_dimension[2])
+    vutils.save_image(latent_space,
+                      "./plots/2d_latent_space.png",
+                      normalize=True,
+                      nrow=n)
+    return latent_space
+
+
+
 """
+latent=plot_2d_latent_space(model.model, r0=(-1, 1), r1=(-1, 1),  n=50)
+
+vutils.save_image(latent.cpu().data.view(-1,1,28,28),
+                  "./plots/2d_latent_space.png.png",
+                  normalize=True,
+                  nrow=50)
+
+
+
 from trainer_lightning_module import VAETrainer
 import torch
 import torchvision.utils as vutils
 
 ## check with other one
-path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\logs\\BetaVAE\\version_0\\checkpoints\\epoch=19-step=16879.ckpt"
+path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\logs\\SigmaVAE\\version_10\\checkpoints\\epoch=19-step=16879.ckpt"
 model = VAETrainer.load_from_checkpoint(path)
 checkpoint = torch.load(path)
 checkpoint
@@ -82,6 +114,10 @@ vutils.save_image(samples.cpu().data,
                   "./plots/beta_vae_sampled.png",
                   normalize=True,
                   nrow=12)
+
+
+
+
 
 label_1=1
 label_2=3
