@@ -7,8 +7,7 @@ import numpy as np
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 import matplotlib.pyplot as plt; plt.rcParams['figure.dpi'] = 200
-from models.linear_variational_autoencoder import *
-from models.linear_autoencoder import *
+from models.LinearVAE import *
 import os
 import yaml
 
@@ -218,8 +217,8 @@ def main(config_filename: str):
 if __name__ == "__main__":
     # define some variables
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    writer = SummaryWriter("./logs_tensorboard/")
-    vae = main("configs/config_linear_variational_autoencoder.yaml")
+    writer = SummaryWriter("./logs/")
+    vae = main("configs/linear_vae_config.yaml")
     writer.flush()
     writer.close()
 

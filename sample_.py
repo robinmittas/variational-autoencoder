@@ -1,13 +1,13 @@
 import torch
-
+from torchvision.datasets import MNIST, CelebA
 import yaml
 import matplotlib.pyplot as plt; plt.rcParams['figure.dpi'] = 200
 import numpy as np
 from mpl_toolkits.axes_grid1 import ImageGrid
 from trainer_lightning_module import *
-import sys
+from torchvision.utils import save_image
 
-sys.path.append("C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\models")
+
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -42,12 +42,12 @@ vae = VarBayesianAE(in_channels=config["input_image_size"][0],
                     max_pool=config["max_pool"],
                     linear_layer_dimension=3)
 
-path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\lightning_logs\\version_6\\checkpoints\\epoch=21-step=16500.ckpt"
+path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\lightning_logs\\version_34\\checkpoints\\epoch=31-step=23999.ckpt"
 
 
 
 ## check with other one
-path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\lightning_logs\\version_17\\checkpoints\\epoch=19-step=15000.ckpt"
+path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\lightning_logs\\version_37\\checkpoints\\epoch=15-step=11999.ckpt"
 model = VAETrainer.load_from_checkpoint(path)
 checkpoint = torch.load(path)
 checkpoint
@@ -57,14 +57,13 @@ checkpoint
 checkpoint = torch.load(path)
 model.load_state_dict(checkpoint["state_dict"])
 
-sample = torch.rand(16,16)
+sample = torch.rand(64,2)
 out = model.model.decoder(sample)
 
-plt.imshow(out[2].permute(1,2,0).detach().numpy())
 
 fig = plt.figure(figsize=(4., 4.))
 grid = ImageGrid(fig, 111,  # similar to subplot(111)
-                 nrows_ncols=(16, 1))
+                 nrows_ncols=(8, 8))
 
 for ax, im in zip(grid, out):
     # Iterating over the grid returns the Axes.
@@ -75,6 +74,8 @@ plt.xticks([])
 plt.yticks([])
 plt.show()
 
+save_image(out.view(-1, 1,28,28), '.\\sample_' + '.png')
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
@@ -83,7 +84,7 @@ def plot_reconstructed(autoencoder, r0=(-10, 10), r1=(-10, 10), n=12):
     img = np.zeros((n*w, n*w))
     for i, y in enumerate(np.linspace(*r1, n)):
         for j, x in enumerate(np.linspace(*r0, n)):
-            z = torch.Tensor([[x, y]]).to(device)
+            z = torch.Tensor([[x, y]])#.to(device)
             x_hat = autoencoder.decoder(z)
             x_hat = x_hat.reshape(28, 28).to('cpu').detach().numpy()
             img[(n-1-i)*w:(n-1-i+1)*w, j*w:(j+1)*w] = x_hat
@@ -282,3 +283,9 @@ for i in range(8):
 
 
 first_dim_latent = torch.stack(x1_enc)
+
+
+
+## read in celeba Vanilla VAE
+train_celeba = torch.utils.data.DataLoader(CelebA(root="../PyTorch-VAE/data", transform=transforms.ToTensor(), download=True, split="train"))
+path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\PyTorch-VAE\\logs\\VanillaVAE\\version_11\\checkpoints\\epoch=1-step=5087.ckpt"

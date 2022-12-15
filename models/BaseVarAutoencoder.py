@@ -11,6 +11,21 @@ class BaseEncoder(nn.Module):
     def forward(self, x: torch.tensor) -> torch.tensor:
         raise NotImplementedError
 
+    def reparameterize(self, mu: torch.Tensor, logsigma: torch.Tensor) -> torch.Tensor:
+        """
+        Reparameterization trick to sample from N(mu, var): See Appendix
+        The Encoder returns mean and log(variance). We then sample from Standard Normal Distribution, multiply and add to retrieve
+        exp(0.5*log_sigma)*N(0,1) + mu          ~ N(mu, sigma)
+        which then behaves like ~ N(mu, sigma) and thus we have sampled from latent space.
+        :param mu: (torch.Tensor) Mean of the latent Gaussian [B x D]
+        :param logsigma: (torch.Tensor) Standard deviation of the latent Gaussian [B x D]
+        :return: (torch.Tensor) [B x D] ~ N(mu, sigma) for each element in batch
+        """
+        std = torch.exp(torch.mul(0.5, logsigma))
+        # retrieve eps ~ N(0, sigma)
+        eps = torch.randn_like(std)
+        return eps * std + mu
+
 
 class BaseDecoder(nn.Module):
     def __init__(self) -> None:
@@ -25,7 +40,16 @@ class BaseVarAutoencoder(nn.Module):
         super(BaseVarAutoencoder, self).__init__()
 
     def sample(self, batch_size: int, current_device: int, **kwargs) -> torch.Tensor:
-        raise NotImplementedError
+        """
+        this functions samples with given batch size from Standard Normal Distribution N(0,1) with latent dimension
+        :param batch_size: how many samples to draw
+        :param current_device: devide
+        :param kwargs:
+        :return:
+        """
+        standard_normal_samples = torch.randn(batch_size, self.latent_dimension)
+        decoded = self.decoder(standard_normal_samples.to(current_device))
+        return decoded
 
     def generate(self, x: torch.Tensor, **kwargs) -> torch.Tensor:
         raise NotImplementedError

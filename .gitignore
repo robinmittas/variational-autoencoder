@@ -5,3 +5,5 @@ logs_tensorboard/
 .idea/
 lightning_logs/
 sample_.py
+new.py
+logs/

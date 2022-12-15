@@ -66,20 +66,6 @@ class VarBayesianEncoder(BaseEncoder):
         """
         return self.encoder(x)
 
-    def reparameterize(self, mu: torch.Tensor, logsigma: torch.Tensor) -> torch.Tensor:
-        """
-        Reparameterization trick to sample from N(mu, var): See Appendix
-        The Encoder returns mean and log(variance). We then sample from Standard Normal Distribution, multiply and add to retrieve
-        exp(0.5*log_sigma)*N(0,1) + mu          ~ N(mu, sigma)
-        which then behaves like ~ N(mu, sigma) and thus we have sampled from latent space.
-        :param mu: (torch.Tensor) Mean of the latent Gaussian [B x D]
-        :param logsigma: (torch.Tensor) Standard deviation of the latent Gaussian [B x D]
-        :return: (torch.Tensor) [B x D] ~ N(mu, sigma) for each element in batch
-        """
-        std = torch.exp(0.5 * logsigma)
-        # retrieve eps ~ N(0, sigma)
-        eps = torch.randn_like(std)
-        return eps * std + mu
 
 
 class VarBayesianDecoder(BaseDecoder):
@@ -137,7 +123,7 @@ class VarBayesianDecoder(BaseDecoder):
                                      kernel_size=(6, 6),
                                      stride=(1, 1),
                                      padding=0)
-        self.tanh = nn.Tanh()
+        #self.tanh = nn.Tanh()
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x: torch.Tensor) -> [torch.Tensor, ...]:
@@ -165,6 +151,8 @@ class VarBayesianAE(BaseVarAutoencoder):
                  max_pool: [bool, ...],
                  linear_layer_dimension: int):
         super(VarBayesianAE, self).__init__()
+
+        self.latent_dimension = latent_dimension
         self.encoder = VarBayesianEncoder(in_channels=in_channels,
                                           hidden_dimensions=hidden_dimensions,
                                           latent_dimension=latent_dimension,
@@ -204,7 +192,9 @@ class VarBayesianAE(BaseVarAutoencoder):
 
         reconstruction_loss = nn.functional.mse_loss(reconstruction, orig_input, reduction=kwargs["mse_reduction"])
         # for derivation of KL Term of two Std. Normals, see Appendix TODO!
-        KL_divergence_loss = torch.mean(-0.5 * torch.sum(1 + log_sigma - mu ** 2 - log_sigma.exp(), dim=1), dim=0)
+        # KL_divergence_loss = torch.mean(-0.5 * torch.sum(1 + log_sigma - mu ** 2 - log_sigma.exp(), dim=1), dim=0)
+        KL_divergence_loss = -0.5 * torch.sum(1 + log_sigma - mu ** 2 - log_sigma.exp())
+
         # Add a weight to KL divergence term as the loss otherwise is too much dominated by this term!
         # For Validation we set this to 1
         KL_divergence_weight = kwargs["KL_divergence_weight"]
@@ -215,44 +205,8 @@ class VarBayesianAE(BaseVarAutoencoder):
                 "kl_divergence_loss": KL_divergence_loss,
                 "reconstruction_loss": reconstruction_loss}
 
-"""
-encoder = VarBayesianEncoder(in_channels=1,
-                  hidden_dimensions=[32,64,128],
-                  latent_dimension= 128,
-                  kernel_size=(2,2),
-                  stride= (2,2),
-                  padding=1,
-                  max_pool=[False,False,False],
-                             linear_layer_dimension=5)
 
-mu, sigma, sample = encoder(torch.rand([10,1,28,28]))#.shape
 
-decoder = VarBayesianDecoder(in_channels=1,
-                  hidden_dimensions=[32,64,128],
-                  latent_dimension= 128,
-                  kernel_size=(2,2),
-                  stride= (2,2),
-                  padding=1,
-                  upsample=[False,False,False],
-                  linear_layer_dimension=5)
 
-decoder(sample).shape
-decoder.final_layer(decoder(sample)).shape
 
-vae = VarBayesianAE(in_channels=1,
-                  hidden_dimensions=[32,64,128,256],
-                  latent_dimension= 128,
-                  kernel_size=(2,2),
-                  stride= (2,2),
-                  padding=1,
-                  max_pool=[False,False,False,False],
-                  linear_layer_dimension=3)
-vae.loss(vae(in_test), mse_reduction="sum", KL_divergence_weight=1)
-vae.encoder.check_forward_shape(torch.rand([10,1,28,28])).shape
 
-in_test = torch.rand([10,1,28,28])
-torch.nn.functional.mse_loss(in_test, vae(in_test)[0], reduction="sum", KL_divergence_weight=1)
-vae()[0].shape
-
-((in_test - vae(in_test)[0]) ** 2).mean([0,1,2,3], keepdim=True)
-"""
