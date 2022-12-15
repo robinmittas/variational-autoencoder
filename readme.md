@@ -7,8 +7,11 @@ As a Dataset I have used the MNIST Dataset
 1. Standard Linear VAE
 
 ![](plots/linear_vae_sampled.png)
+
 2. Standard VAE
+
 3. β-VAE
+
 4. σ-VA
 
 ![](plots/sigma_vae_sampled.png)
