@@ -13,7 +13,7 @@ mse_reduction: "sum" # possible values: sum or mean (e.g. pixelwise summed loss 
 # Some parameters what we want to log:
 plot_2_interpolate_dir: "./plots/linear_vae_interpolate_2_numbers.png"
 plot_sample: "./plots/linear_vae_sampled.png"
-accelerator: "gpu"
-devices: 1
-logging_dir: "./logs"
-logging_name: "LinearVAE"
+accelerator: "gpu" # set according to your device
+devices: 1 # set according to your device
+logging_dir: "./logs" # logging directory
+logging_name: "LinearVAE" # logging subdirectory

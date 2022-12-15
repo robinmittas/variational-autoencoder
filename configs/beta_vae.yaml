@@ -1,0 +1,24 @@
+# model parameters
+latent_dimension: 8 # set to two for nice latent plot/ representations
+input_image_size: [1,28,28] # MNIST Dataset is just greyscale --> in_channels == 1
+hidden_dimensions: [32,64,128,256] # The hidden Dimensions basically specify the numer of convolutional Layers where each element of the list specifies the number of filters (e.g. the output dimension)
+max_pool: [False,False,False,False,False] # needs to have the same length as hidden_dimension and specifies per block if we use max pool
+kernel_size: [2,2]
+stride: [2,2]
+padding: 1
+learning_rate: 0.001
+train_valid_split: 0.9
+KL_divergence_weight: 0.1 # play around with KLD weight β, if >1 then we penalize the KLD more than the reconstruction loss, and vice versa
+mse_reduction: "sum" # possible values: sum or mean (e.g. pixelwise summed loss or average loss)
+epochs: 20
+batch_size: 64
+linear_layer_dimension: 3
+
+
+# Some parameters what we want to log:
+plot_2_interpolate_dir: "./plots/beta_1e-1_vae_interpolate_2_numbers.png"
+plot_sample: "./plots/beta_1e-1_vae_sampled.png"
+accelerator: "gpu"
+devices: 1
+logging_dir: "./logs"
+logging_name: "BetaVAE"

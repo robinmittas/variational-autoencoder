@@ -1,14 +1,11 @@
 import torch; torch.manual_seed(0)
-from PIL import Image
 import torch.utils
 import torch.distributions
 import torchvision
-import numpy as np
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 import matplotlib.pyplot as plt; plt.rcParams['figure.dpi'] = 200
 from models.LinearVAE import *
-import os
 import yaml
 
 

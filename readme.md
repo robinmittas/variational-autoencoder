@@ -8,11 +8,17 @@ As a Dataset I have used the MNIST Dataset
 
 ![](plots/linear_vae_sampled.png)
 
-2. Standard VAE
+2. Standard Convolutional VAE
 
-3. β-VAE
+![](plots/standard_conv_vae_sampled.png)
+3. β-VAE (β=2)
 
-4. σ-VA
+![](plots/beta_2_vae_sampled.png)
+
+4. β-VAE (β=1e-1)
+
+![](plots/beta_1e-1_vae_sampled.png)
+5. σ-VA
 
 ![](plots/sigma_vae_sampled.png)
 

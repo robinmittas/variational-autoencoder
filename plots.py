@@ -29,7 +29,7 @@ def interpolate_2_images(model,
     z_1 = model.encoder(x_1.to(device))[0]
     z_2 = model.encoder(x_2.to(device))[0]
     z = torch.stack([z_1 + (z_2 - z_1) * t for t in np.linspace(0, 1, n)])
-    interpolate_list = model.model.decoder(z)
+    interpolate_list = model.decoder(z)
 
     vutils.save_image(interpolate_list.cpu().data,
                       path,
@@ -69,7 +69,7 @@ import torch
 import torchvision.utils as vutils
 
 ## check with other one
-path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\logs\\LinearVAE\\version_2\\checkpoints\\epoch=29-step=25319.ckpt"
+path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\logs\\BetaVAE\\version_0\\checkpoints\\epoch=19-step=16879.ckpt"
 model = VAETrainer.load_from_checkpoint(path)
 checkpoint = torch.load(path)
 checkpoint
@@ -79,7 +79,7 @@ samples = model.model.sample(144, "cpu")
 
 
 vutils.save_image(samples.cpu().data,
-                  "./plots/sample_linear_vae.png",
+                  "./plots/beta_vae_sampled.png",
                   normalize=True,
                   nrow=12)
 
@@ -96,7 +96,7 @@ interpolate_list = model.model.decoder(z)
 #interpolate_list = interpolate_list.to('cpu').detach().numpy()
 
 vutils.save_image(interpolate_list.cpu().data,
-                  "./plots/interpolate_2_numbers.png",
+                  "./plots/standard_conv_vae_interpolate_2_numbers.png",
                   normalize=True,
                   nrow=n)
 """

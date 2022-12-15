@@ -78,7 +78,7 @@ class VAETrainer(pl.LightningModule):
                              device=self.current_device,
                              path=self.params["plot_2_interpolate_dir"])
         sampled = self.model.sample(144, self.current_device)
-        img_grid = utils.make_grid(sampled)
+        img_grid = utils.make_grid(sampled, nrow=12)
         vutils.save_image(img_grid.cpu().data,
                           self.params["plot_sample"],
                           normalize=True,
@@ -87,7 +87,7 @@ class VAETrainer(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    with open("configs/var_bayesian_config.yaml", encoding='utf8') as conf:
+    with open("configs/beta_vae.yaml", encoding='utf8') as conf:
         config = yaml.load(conf, Loader=yaml.FullLoader)
         conf.close()
     # use MNIST Dataset and load training and test data
