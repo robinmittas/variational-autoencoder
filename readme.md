@@ -18,11 +18,11 @@ As a Dataset I have used the MNIST Dataset
 
 4. β-VAE (β=1e-1)
 
-![](plots/beta_1e-1_vae_sampled.png)
+![](plots/beta_4_vae_sampled.png)
 
 5. σ-VAE
 
-![](plots/sigma_vae_sampled_latent8.png)
+![](plots/sigma_vae_sampled_latent2.png)
 
 The following image illustrates the Latent Space distribution for a σ-VAE with 2-dimensional Latent Space. 
 The image on the top right is a decoded Image of the sample (-1,1), the top right displays the decoded Image of the latent vector (1,1).

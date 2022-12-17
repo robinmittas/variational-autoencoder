@@ -1,5 +1,5 @@
 # model parameters
-latent_dimension: 2 # dimension of latent space
+latent_dimension: 8 # dimension of latent space
 input_image_size: [1,28,28] # MNIST Dataset is just greyscale --> in_channels == 1
 hidden_dimensions: [32,64,128,256] # The hidden Dimensions basically specify the numer of convolutional Layers where each element of the list specifies the number of filters (e.g. the output dimension)
 max_pool: [False,False,False,False,False] # needs to have the same length as hidden_dimension and specifies per block if we use max pool
@@ -16,7 +16,7 @@ linear_layer_dimension: 3
 
 
 # Some parameters what we want to log:
-plot_2_interpolate_dir: "./plots/sigma_vae_interpolate_2_numbers.png"
+plot_2_interpolate_dir: "./plots/sigma_vae_interpolate_2_numbers__latent8.png"
 plot_sample: "./plots/sigma_vae_sampled_latent8.png"
 accelerator: "gpu"
 devices: 1

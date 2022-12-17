@@ -19,6 +19,7 @@ class VAETrainer(pl.LightningModule):
         self.params = params
         self.save_hyperparameters()
         self.current_device = params["devices"]
+        self.training_steps_total = 0
 
     def forward(self, x):
         return self.model(x)
@@ -28,6 +29,7 @@ class VAETrainer(pl.LightningModule):
         return optimizer
 
     def training_step(self, train_batch, batch_idx):
+        self.training_steps_total += 1
         x, y = train_batch
         self.current_device = x.device
         output = self.forward(x)
@@ -86,7 +88,7 @@ class VAETrainer(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    with open("configs/sigma_vae.yaml", encoding='utf8') as conf:
+    with open("configs/beta_vae.yaml", encoding='utf8') as conf:
         config = yaml.load(conf, Loader=yaml.FullLoader)
         conf.close()
     # use MNIST Dataset and load training and test data
@@ -105,23 +107,23 @@ if __name__ == "__main__":
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=64, shuffle=True)
     val_loader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=True)
 
-    vae = SigmaVAE(in_channels=config["input_image_size"][0],
-                   hidden_dimensions=config["hidden_dimensions"],
-                   latent_dimension=config["latent_dimension"],
-                   kernel_size=config["kernel_size"],
-                   stride=config["stride"],
-                   padding=config["padding"],
-                   max_pool=config["max_pool"],
-                   linear_layer_dimension=config["linear_layer_dimension"])
+    #vae = SigmaVAE(in_channels=config["input_image_size"][0],
+    #               hidden_dimensions=config["hidden_dimensions"],
+    #               latent_dimension=config["latent_dimension"],
+    #               kernel_size=config["kernel_size"],
+    #               stride=config["stride"],
+    #               padding=config["padding"],
+    #               max_pool=config["max_pool"],
+    #               linear_layer_dimension=config["linear_layer_dimension"])
 
-    #vae = VarBayesianAE(in_channels=config["input_image_size"][0],
-    #                    hidden_dimensions=config["hidden_dimensions"],
-    #                    latent_dimension= config["latent_dimension"],
-    #                    kernel_size=config["kernel_size"],
-    #                    stride=config["stride"],
-    #                    padding=config["padding"],
-    #                    max_pool=config["max_pool"],
-    #                    linear_layer_dimension=config["linear_layer_dimension"])
+    vae = VarBayesianAE(in_channels=config["input_image_size"][0],
+                        hidden_dimensions=config["hidden_dimensions"],
+                        latent_dimension= config["latent_dimension"],
+                        kernel_size=config["kernel_size"],
+                        stride=config["stride"],
+                        padding=config["padding"],
+                        max_pool=config["max_pool"],
+                        linear_layer_dimension=config["linear_layer_dimension"])
 
     #vae = LinearVAE(input_dimension=config["input_image_size"],
     #                hidden_dimensions=config["hidden_dimensions"],
