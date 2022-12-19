@@ -39,17 +39,17 @@ class BaseVarAutoencoder(nn.Module):
     def __init__(self) -> None:
         super(BaseVarAutoencoder, self).__init__()
 
-    def sample(self, batch_size: int, current_device: int, **kwargs) -> torch.Tensor:
+    def sample(self, batch_size: int, current_device: int, **kwargs) -> tuple[torch.Tensor, typing.Any]:
         """
         this functions samples with given batch size from Standard Normal Distribution N(0,1) with latent dimension
         :param batch_size: how many samples to draw
-        :param current_device: devide
+        :param current_device: device
         :param kwargs:
         :return:
         """
         standard_normal_samples = torch.randn(batch_size, self.latent_dimension)
         decoded = self.decoder(standard_normal_samples.to(current_device))
-        return decoded
+        return standard_normal_samples, decoded
 
     def generate(self, x: torch.Tensor, **kwargs) -> torch.Tensor:
         raise NotImplementedError

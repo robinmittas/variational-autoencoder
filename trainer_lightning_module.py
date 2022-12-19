@@ -3,6 +3,7 @@ from torchvision.datasets import MNIST
 from torchvision import transforms, utils
 import pytorch_lightning as pl
 from models.VarBayesianAE import *
+from models.BetaVAE import *
 from models.LinearVAE import *
 from models.SigmaVAE import *
 from models.BaseVarAutoencoder import *
@@ -19,7 +20,10 @@ class VAETrainer(pl.LightningModule):
         self.params = params
         self.save_hyperparameters()
         self.current_device = params["devices"]
-        self.training_steps_total = 0
+        self.current_training_step = 0
+        self.valid_params = params
+        self.valid_params["KL_divergence_weight"] = 1
+        self.valid_params["scale_kld"] = False
 
     def forward(self, x):
         return self.model(x)
@@ -29,13 +33,13 @@ class VAETrainer(pl.LightningModule):
         return optimizer
 
     def training_step(self, train_batch, batch_idx):
-        self.training_steps_total += 1
+        self.current_training_step += 1
         x, y = train_batch
         self.current_device = x.device
         output = self.forward(x)
         loss = self.model.loss(output,
-                               mse_reduction=self.params["mse_reduction"],
-                               KL_divergence_weight=self.params["KL_divergence_weight"])
+                               current_train_step=self.current_training_step,
+                               **self.params)
 
         self.log_dict({f"train_{loss_key}": loss_val.item() for loss_key, loss_val in loss.items()})
 
@@ -46,8 +50,8 @@ class VAETrainer(pl.LightningModule):
         self.current_device = x.device
         output = self.forward(x)
         loss = self.model.loss(output,
-                               mse_reduction=self.params["mse_reduction"],
-                               KL_divergence_weight=1) # for validation step set KLD weight always to 1
+                               current_train_step=self.current_training_step,
+                               **self.valid_params)  # for validation step set KLD weight always to 1
 
         self.log_dict({f"valid_{loss_key}": loss_val.item() for loss_key, loss_val in loss.items()})
 
@@ -92,20 +96,45 @@ if __name__ == "__main__":
         config = yaml.load(conf, Loader=yaml.FullLoader)
         conf.close()
     # use MNIST Dataset and load training and test data
-    training_data = MNIST(root='./data', transform=transforms.ToTensor(), train=True, download=True)
+    #training_data = MNIST(root='./data', transform=transforms.ToTensor(), train=True, download=True)
 
-    test_loader = torch.utils.data.DataLoader(
-        MNIST(root='./data', transform=transforms.ToTensor(), train=False, download=True),
-        batch_size=128,
-        shuffle=True)
+    #test_loader = torch.utils.data.DataLoader(
+    #    MNIST(root='./data', transform=transforms.ToTensor(), train=False, download=True),
+    #    batch_size=128,
+    #    shuffle=True)
 
-    train_size = int(config["train_valid_split"] * len(training_data))
-    val_size = len(training_data) - train_size
-    train_set, val_set = torch.utils.data.random_split(training_data, [train_size, val_size])
+    #train_size = int(config["train_valid_split"] * len(training_data))
+    #val_size = len(training_data) - train_size
+    #train_set, val_set = torch.utils.data.random_split(training_data, [train_size, val_size])
 
     # Load data into torch Dataloader
-    train_loader = torch.utils.data.DataLoader(train_set, batch_size=64, shuffle=True)
-    val_loader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=True)
+    #train_loader = torch.utils.data.DataLoader(train_set, batch_size=64, shuffle=True)
+    #val_loader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=True)
+
+    from torch.utils.data import DataLoader
+    from torchvision import datasets, transforms
+
+    DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    # Root directory for the dataset
+    data_root = "/content/data_faces/img_align_celeba"
+    # Spatial size of training images, images are resized to this size.
+    image_size = 64
+
+    batch_size = 32
+    transform = transforms.Compose([
+        transforms.Resize((64, 64)),
+        transforms.ToTensor()
+    ])
+    celeba_data = datasets.ImageFolder('C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\PyTorch-VAE\\data\\celeba\\', transform=transform)
+
+    training_data = len(celeba_data)
+    train_size = int(0.8 * training_data)
+    val_size = training_data - train_size
+    train, val = torch.utils.data.random_split(celeba_data, [train_size, val_size])
+
+    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val, batch_size=batch_size, shuffle=True)
+
 
     #vae = SigmaVAE(in_channels=config["input_image_size"][0],
     #               hidden_dimensions=config["hidden_dimensions"],
@@ -116,14 +145,23 @@ if __name__ == "__main__":
     #               max_pool=config["max_pool"],
     #               linear_layer_dimension=config["linear_layer_dimension"])
 
-    vae = VarBayesianAE(in_channels=config["input_image_size"][0],
-                        hidden_dimensions=config["hidden_dimensions"],
-                        latent_dimension= config["latent_dimension"],
-                        kernel_size=config["kernel_size"],
-                        stride=config["stride"],
-                        padding=config["padding"],
-                        max_pool=config["max_pool"],
-                        linear_layer_dimension=config["linear_layer_dimension"])
+    #vae = VarBayesianAE(in_channels=config["input_image_size"][0],
+    #                    hidden_dimensions=config["hidden_dimensions"],
+    #                    latent_dimension= config["latent_dimension"],
+    #                    kernel_size=config["kernel_size"],
+    #                    stride=config["stride"],
+    #                    padding=config["padding"],
+    #                    max_pool=config["max_pool"],
+    #                    linear_layer_dimension=config["linear_layer_dimension"])
+
+    vae = BetaVAE(in_channels=config["input_image_size"][0],
+                    hidden_dimensions=config["hidden_dimensions"],
+                    latent_dimension=config["latent_dimension"],
+                    kernel_size=config["kernel_size"],
+                    stride=config["stride"],
+                    padding=config["padding"],
+                    max_pool=config["max_pool"],
+                    linear_layer_dimension=config["linear_layer_dimension"])
 
     #vae = LinearVAE(input_dimension=config["input_image_size"],
     #                hidden_dimensions=config["hidden_dimensions"],

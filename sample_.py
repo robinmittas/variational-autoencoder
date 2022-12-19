@@ -11,7 +11,7 @@ from torchvision.utils import save_image
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-with open("configs/var_bayesian_config.yaml", encoding='utf8') as conf:
+with open("configs/beta_vae.yaml", encoding='utf8') as conf:
     config = yaml.load(conf, Loader=yaml.FullLoader)
     conf.close()
 # use MNIST Dataset and load training and test data
@@ -42,12 +42,12 @@ vae = VarBayesianAE(in_channels=config["input_image_size"][0],
                     max_pool=config["max_pool"],
                     linear_layer_dimension=3)
 
-path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\lightning_logs\\version_34\\checkpoints\\epoch=31-step=23999.ckpt"
+path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\logs\\BetaVAE\\version_7\\checkpoints\\epoch=9-step=50649.ckpt"
 
 
 
 ## check with other one
-path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\lightning_logs\\version_37\\checkpoints\\epoch=15-step=11999.ckpt"
+path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\lightning_logs\\version_37\\checkpoints\\epoch=9-step=50649.ckpt"
 model = VAETrainer.load_from_checkpoint(path)
 checkpoint = torch.load(path)
 checkpoint
@@ -57,15 +57,45 @@ checkpoint
 checkpoint = torch.load(path)
 model.load_state_dict(checkpoint["state_dict"])
 
-sample = torch.rand(64,2)
+sample = torch.rand(64, 10)
 out = model.model.decoder(sample)
 
+standard_normal_samples = torch.randn(144, 10)
+decoded = model.model.decoder(standard_normal_samples.to("cpu"))
+
+vutils.save_image(decoded.cpu().data,
+                      "plots/TEST.png",
+                      normalize=False,
+                      nrow=12)
+lin = torch.zeros(144,10)
+lin[:, 5] = -1
+
+latent_samples_0_1 = standard_normal_samples+lin
+decoded_0_1 = model.model.decoder(latent_samples_0_1.to("cpu"))
+vutils.save_image(decoded_0_1.cpu().data,
+                      "plots/TEST_minus_0_1.png",
+                      normalize=False,
+                      nrow=12)
+##################
+##
+standard_normal_samples = torch.randn(144, 10)
+for latent_dim in range(10):
+    for idx, delta in enumerate(torch.linspace(-3, 3, steps=20)):
+        z = torch.zeros(144, 10)
+        z[:, latent_dim] = delta
+        latent_sample = standard_normal_samples + z
+        decoded = model.model.decoder(latent_sample.to("cpu"))
+        vutils.save_image(decoded.cpu().data,
+                          f"plots/celeba/latent_dim_{latent_dim}_delta_{idx}.png",
+                          normalize=False,
+                          nrow=12)
+##############
 
 fig = plt.figure(figsize=(4., 4.))
 grid = ImageGrid(fig, 111,  # similar to subplot(111)
-                 nrows_ncols=(8, 8))
+                 nrows_ncols=(12, 12))
 
-for ax, im in zip(grid, out):
+for ax, im in zip(grid, sample):
     # Iterating over the grid returns the Axes.
     ax.imshow(im.permute(1,2,0).detach().numpy())
     plt.xticks([])
@@ -73,6 +103,12 @@ for ax, im in zip(grid, out):
 plt.xticks([])
 plt.yticks([])
 plt.show()
+
+vutils.save_image(sample.cpu().data,
+                      "plots/TEST.png",
+                      normalize=True,
+                      nrow=12)
+
 
 save_image(out.view(-1, 1,28,28), '.\\sample_' + '.png')
 
@@ -289,3 +325,4 @@ first_dim_latent = torch.stack(x1_enc)
 ## read in celeba Vanilla VAE
 train_celeba = torch.utils.data.DataLoader(CelebA(root="../PyTorch-VAE/data", transform=transforms.ToTensor(), download=True, split="train"))
 path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\PyTorch-VAE\\logs\\VanillaVAE\\version_11\\checkpoints\\epoch=1-step=5087.ckpt"
+

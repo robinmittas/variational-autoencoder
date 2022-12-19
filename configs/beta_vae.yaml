@@ -1,21 +1,21 @@
 ## model parameters
-latent_dimension: 8 # set to two for nice latent plot/ representations
-input_image_size: [1,28,28] # MNIST Dataset is just greyscale --> in_channels == 1
-hidden_dimensions: [32,64,128,256] # The hidden Dimensions basically specify the numer of convolutional Layers where each element of the list specifies the number of filters (e.g. the output dimension)
+latent_dimension: 10 # set to two for nice latent plot/ representations
+input_image_size: [3,64,64] # CELEBA Dataset resize to 3x64x64 due to memory issues.
+hidden_dimensions: [32,64,128,256,512] # The hidden Dimensions basically specify the numer of convolutional Layers where each element of the list specifies the number of filters (e.g. the output dimension)
 max_pool: [False,False,False,False,False] # needs to have the same length as hidden_dimension and specifies per block if we use max pool
-kernel_size: [2,2]
+kernel_size: [3,3]
 stride: [2,2]
 padding: 1
 learning_rate: 0.001
 train_valid_split: 0.9
 ## loss specifications
-KL_divergence_weight: 4 # play around with KLD weight β, if >1 then we penalize the KLD more than the reconstruction loss, and vice versa
+KL_divergence_weight: 10 # play around with KLD weight β, if >1 then we penalize the KLD more than the reconstruction loss, and vice versa
 mse_reduction: "sum" # possible values: sum or mean (e.g. pixelwise summed loss or average loss)
 scale_kld: True # whether we want to scale the KLD Loss in the first K training steps so that the reconstruction term first goes down
 first_k_train_steps: 10000
 epochs: 20
-batch_size: 64
-linear_layer_dimension: 3
+batch_size: 32
+linear_layer_dimension: 2
 
 
 # Some parameters what we want to log:

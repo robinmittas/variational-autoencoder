@@ -120,7 +120,8 @@ class VarBayesianDecoder(BaseDecoder):
         # add one last layer as heigt, weight of image is bigger then initally
         self.final_layer = nn.Conv2d(in_channels=self.in_channels,
                                      out_channels=self.in_channels,
-                                     kernel_size=(6, 6),
+                                     #kernel_size=(6, 6),
+                                     kernel_size=(1,1),
                                      stride=(1, 1),
                                      padding=0)
         #self.tanh = nn.Tanh()
