@@ -1,6 +1,6 @@
 from torch.utils.data import DataLoader
 from torchvision.datasets import MNIST
-from torchvision import transforms, utils
+from torchvision import transforms, utils, datasets
 import pytorch_lightning as pl
 from models.VarBayesianAE import *
 from models.BetaVAE import *
@@ -70,7 +70,7 @@ class VAETrainer(pl.LightningModule):
         At the end of epoch we want to Sample from Latent Space and log these
         :return:
         """
-        sampled = self.model.sample(144, self.current_device)
+        standard_norm, sampled = self.model.sample(144, self.current_device)
         img_grid = utils.make_grid(sampled)
         tensorboard = self.logger.experiment
         tensorboard.add_image(f'Sampled Images {self.current_epoch}', img_grid)
@@ -83,7 +83,7 @@ class VAETrainer(pl.LightningModule):
                              n=12,
                              device=self.current_device,
                              path=self.params["plot_2_interpolate_dir"])
-        sampled = self.model.sample(144, self.current_device)
+        standard_norm, sampled = self.model.sample(144, self.current_device)
         img_grid = utils.make_grid(sampled, nrow=12)
         vutils.save_image(img_grid.cpu().data,
                           self.params["plot_sample"],
@@ -92,7 +92,7 @@ class VAETrainer(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    with open("configs/beta_vae.yaml", encoding='utf8') as conf:
+    with open("configs/var_bayesian_config.yaml", encoding='utf8') as conf:
         config = yaml.load(conf, Loader=yaml.FullLoader)
         conf.close()
     # use MNIST Dataset and load training and test data
@@ -111,29 +111,23 @@ if __name__ == "__main__":
     #train_loader = torch.utils.data.DataLoader(train_set, batch_size=64, shuffle=True)
     #val_loader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=True)
 
-    from torch.utils.data import DataLoader
-    from torchvision import datasets, transforms
-
-    DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    # Root directory for the dataset
-    data_root = "/content/data_faces/img_align_celeba"
-    # Spatial size of training images, images are resized to this size.
-    image_size = 64
-
-    batch_size = 32
+    # transforms for training and validation sets
     transform = transforms.Compose([
-        transforms.Resize((64, 64)),
+        transforms.Resize((config["resize"], config["resize"])),
         transforms.ToTensor()
     ])
-    celeba_data = datasets.ImageFolder('C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\PyTorch-VAE\\data\\celeba\\', transform=transform)
 
-    training_data = len(celeba_data)
-    train_size = int(0.8 * training_data)
-    val_size = training_data - train_size
-    train, val = torch.utils.data.random_split(celeba_data, [train_size, val_size])
+    if config["data_path"] == "MNIST":
+        data = MNIST(root='./data', transform=transforms.ToTensor(), train=True, download=True)
+    else:
+        data = datasets.ImageFolder(config["data_path"], transform=transform)
 
-    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val, batch_size=batch_size, shuffle=True)
+    train_size = int(0.8 * len(data))
+    val_size = len(data) - train_size
+    train, val = torch.utils.data.random_split(data, [train_size, val_size])
+
+    train_loader = DataLoader(train, batch_size=config["batch_size"], shuffle=True)
+    val_loader = DataLoader(val, batch_size=config["batch_size"], shuffle=True)
 
 
     #vae = SigmaVAE(in_channels=config["input_image_size"][0],
@@ -143,25 +137,27 @@ if __name__ == "__main__":
     #               stride=config["stride"],
     #               padding=config["padding"],
     #               max_pool=config["max_pool"],
-    #               linear_layer_dimension=config["linear_layer_dimension"])
+    #               linear_layer_dimension=config["linear_layer_dimension"],
+    #               last_conv_layer_kernel_size=config["last_conv_layer_kernel_size"])
 
-    #vae = VarBayesianAE(in_channels=config["input_image_size"][0],
-    #                    hidden_dimensions=config["hidden_dimensions"],
-    #                    latent_dimension= config["latent_dimension"],
-    #                    kernel_size=config["kernel_size"],
-    #                    stride=config["stride"],
-    #                    padding=config["padding"],
-    #                    max_pool=config["max_pool"],
-    #                    linear_layer_dimension=config["linear_layer_dimension"])
+    vae = VarBayesianAE(in_channels=config["input_image_size"][0],
+                        hidden_dimensions=config["hidden_dimensions"],
+                        latent_dimension= config["latent_dimension"],
+                        kernel_size=config["kernel_size"],
+                        stride=config["stride"],
+                        padding=config["padding"],
+                        max_pool=config["max_pool"],
+                        linear_layer_dimension=config["linear_layer_dimension"],
+                        last_conv_layer_kernel_size=config["last_conv_layer_kernel_size"])
 
-    vae = BetaVAE(in_channels=config["input_image_size"][0],
-                    hidden_dimensions=config["hidden_dimensions"],
-                    latent_dimension=config["latent_dimension"],
-                    kernel_size=config["kernel_size"],
-                    stride=config["stride"],
-                    padding=config["padding"],
-                    max_pool=config["max_pool"],
-                    linear_layer_dimension=config["linear_layer_dimension"])
+    #vae = BetaVAE(in_channels=config["input_image_size"][0],
+    #              hidden_dimensions=config["hidden_dimensions"],
+    #              latent_dimension=config["latent_dimension"],
+    #              kernel_size=config["kernel_size"],
+    #              stride=config["stride"],
+    #              padding=config["padding"],
+    #              max_pool=config["max_pool"],
+    #              linear_layer_dimension=config["linear_layer_dimension"])
 
     #vae = LinearVAE(input_dimension=config["input_image_size"],
     #                hidden_dimensions=config["hidden_dimensions"],

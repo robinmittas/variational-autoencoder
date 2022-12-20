@@ -42,12 +42,12 @@ vae = VarBayesianAE(in_channels=config["input_image_size"][0],
                     max_pool=config["max_pool"],
                     linear_layer_dimension=3)
 
-path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\logs\\BetaVAE\\version_7\\checkpoints\\epoch=9-step=50649.ckpt"
+path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\logs\\BetaVAE\\version_11\\checkpoints\\epoch=19-step=101300.ckpt"
+path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\trained_vae\\logs\\BetaVAE\\version_11\\checkpoints\\epoch=19-step=101300.ckpt"
 
 
 
 ## check with other one
-path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\lightning_logs\\version_37\\checkpoints\\epoch=9-step=50649.ckpt"
 model = VAETrainer.load_from_checkpoint(path)
 checkpoint = torch.load(path)
 checkpoint
@@ -60,7 +60,7 @@ model.load_state_dict(checkpoint["state_dict"])
 sample = torch.rand(64, 10)
 out = model.model.decoder(sample)
 
-standard_normal_samples = torch.randn(144, 10)
+standard_normal_samples = torch.randn(12, 128)
 decoded = model.model.decoder(standard_normal_samples.to("cpu"))
 
 vutils.save_image(decoded.cpu().data,
@@ -326,3 +326,20 @@ first_dim_latent = torch.stack(x1_enc)
 train_celeba = torch.utils.data.DataLoader(CelebA(root="../PyTorch-VAE/data", transform=transforms.ToTensor(), download=True, split="train"))
 path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\PyTorch-VAE\\logs\\VanillaVAE\\version_11\\checkpoints\\epoch=1-step=5087.ckpt"
 
+
+path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\logs\\StandardConvVAE\\version_1\\checkpoints\\epoch=19-step=14999.ckpt"
+## check with other one
+model = VAETrainer.load_from_checkpoint(path)
+checkpoint = torch.load(path)
+checkpoint
+
+
+## working
+checkpoint = torch.load(path)
+model.load_state_dict(checkpoint["state_dict"])
+standard_norm, sampled = model.model.sample(144, "cpu")
+img_grid = utils.make_grid(sampled, nrow=12)
+vutils.save_image(img_grid.cpu().data,
+                  "./plots/standard_conv_vae_sampled.png",
+                  normalize=True,
+                  nrow=12)

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt; plt.rcParams['figure.dpi'] = 200
 import numpy as np
 from mpl_toolkits.axes_grid1 import ImageGrid
 import torchvision.utils as vutils
+import imageio
 
 
 def interpolate_2_images(model,
@@ -85,8 +86,46 @@ def plot_2d_latent_space(autoencoder, r0=(-1, 1), r1=(-1, 1), n=50, input_dimens
     return latent_space
 
 
+def plot_latent_traversal(model, latent_dimension, first_k_dims = 20):
+    """
+    Given a model and latent dimension this function plots decoded standard normal draws when traversing them.
+    That means we add per dimension a small delta to observe how the decoded image changes.
+    :param model: trained model
+    :param latent_dimension: latent dimension
+    :param first_k_dims: In case we just want to observe e.g. the first 20 latent dimensions (otherwise one grid will be for example 128*10 images)
+    :return: creates and saves 20 grids f size latent dim x 10. also creates a gif out of these images
+    """
+
+    standard_normal_samples = torch.randn(10, latent_dimension)
+    final_tensor = torch.zeros(10*first_k_dims, 3, 64, 64)
+    for idx, delta in enumerate(torch.linspace(-3, 3, steps=20)):
+        for idx_latent, latent_dim in enumerate(range(first_k_dims)):
+            z = torch.zeros(10, latent_dimension)
+            z[:, latent_dim] = delta
+            latent_sample = standard_normal_samples + z
+            decoded = model.model.decoder(latent_sample.to("cpu"))
+            final_tensor[10*idx_latent: 10*idx_latent + 10] = decoded
+
+            vutils.save_image(final_tensor.cpu().data,
+                              f"plots/gif_latent_128/latent_dim_delta_{idx}.png",
+                              normalize=False,
+                              nrow=10)
+
+    ## create a gif out of the 20 images
+    images = []
+    filenames = [f"plots/gif_latent_128/latent_dim_delta_{index}.png" for index in range(idx+1)]
+    for filename in filenames:
+        images.append(imageio.v2.imread(filename))
+    imageio.mimsave('plots/gif_latent_128/finalgif.gif', images)
+
+    return final_tensor
+
 
 """
+plot_latent_traversal(model, 12, first_k_dims = 10)
+
+
+
 latent=plot_2d_latent_space(model.model, r0=(-1, 1), r1=(-1, 1),  n=50)
 
 vutils.save_image(latent.cpu().data.view(-1,1,28,28),

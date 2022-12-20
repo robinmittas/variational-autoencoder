@@ -3,24 +3,70 @@ This repository contains code and ideas about Variational Autoencoders.
 The current code contains an implementation of Variational Bayesian Autoencoders and its deviations, such as  β-VAE or σ-VAE. All ideas and mathematical foundations will be published in slides and in a report.
 As a Dataset I have used the MNIST Dataset 
 
-### Following samples were drawn from the latent spaces
-1. Standard Linear VAE
+## Samples/ reconstructions for β-VAE/ disentangled VAE on CELEBA Dataset
+### 1. β-VAE (β=20, latent_dimension=12)
+
+Sample:
+
+![](plots/12_sample.png)
+
+Reconstructions:
+
+![](plots/12_original.png)
+
+![](plots/12_reconstructed.png)
+
+
+### 2. β-VAE (β=20, latent_dimension=128)
+
+Sample:
+
+![](plots/128_sample_beta.png)
+
+Reconstructions:
+
+![](plots/128_original_beta.png)!
+
+[](plots/128_reconstructed_beta.png)
+
+
+### 3. β-VAE (β=20, latent_dimension=256)
+
+Sample:
+
+![](plots/256_sample.png)
+
+Reconstructions:
+
+![](plots/256_original_beta.png)
+
+![](plots/256_reconstructed_beta.png)
+
+
+## GIF Latent Traversals
+Following GIF comes from a β-VAE with Latent dimension 12. Each image represents one decoded Vector $z \in \mathbb{R}^{12}$ where each entry is standard normal, $z_i \thicksim \mathcal{N}(0,1) \ \forall i \in \{1,...10\}$.
+Each row represents one latent dimension $i \in \{1,...10\}$ (last two latent dimensions are ignored due to image size) when adding small deltas to one latent dimension at a time.
+
+![](plots/gif_latent_12/finalgif.gif)
+
+## Following samples were drawn from the latent spaces with the MNIST Dataset
+### 1. Standard Linear VAE
 
 ![](plots/linear_vae_sampled.png)
 
-2. Standard Convolutional VAE
+### 2. Standard Convolutional VAE
 
 ![](plots/standard_conv_vae_sampled.png)
 
-3. β-VAE (β=2)
+### 3. β-VAE (β=2)
 
 ![](plots/beta_2_vae_sampled.png)
 
-4. β-VAE (β=1e-1)
+### 4. β-VAE (β=1e-1)
 
 ![](plots/beta_4_vae_sampled.png)
 
-5. σ-VAE
+### 5. σ-VAE
 
 ![](plots/sigma_vae_sampled_latent2.png)
 

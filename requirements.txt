@@ -7,3 +7,4 @@ tqdm
 tensorboard
 pyyaml
 pytorch-lightning
+imageio

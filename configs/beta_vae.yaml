@@ -1,4 +1,6 @@
 ## model parameters
+data_path: "..\\torch_vae\\data\\celeba" # for linux user: "../torch_vae/data/celeba"
+resize: 64
 latent_dimension: 10 # set to two for nice latent plot/ representations
 input_image_size: [3,64,64] # CELEBA Dataset resize to 3x64x64 due to memory issues.
 hidden_dimensions: [32,64,128,256,512] # The hidden Dimensions basically specify the numer of convolutional Layers where each element of the list specifies the number of filters (e.g. the output dimension)
@@ -8,6 +10,8 @@ stride: [2,2]
 padding: 1
 learning_rate: 0.001
 train_valid_split: 0.9
+last_conv_layer_size: [1,1] # for celeba 1x1, mnist 7x7
+
 ## loss specifications
 KL_divergence_weight: 10 # play around with KLD weight β, if >1 then we penalize the KLD more than the reconstruction loss, and vice versa
 mse_reduction: "sum" # possible values: sum or mean (e.g. pixelwise summed loss or average loss)
