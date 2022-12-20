@@ -1,3 +1,7 @@
+"""
+This file is rather deprecated. Please use the trainer_lighning_module.py for training
+"""
+
 import torch; torch.manual_seed(0)
 import torch.utils
 import torch.distributions

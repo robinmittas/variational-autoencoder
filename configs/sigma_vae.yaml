@@ -1,6 +1,5 @@
 # model parameters
 latent_dimension: 8 # dimension of latent space
-input_image_size: [1,28,28] # MNIST Dataset is just greyscale --> in_channels == 1
 hidden_dimensions: [32,64,128,256] # The hidden Dimensions basically specify the numer of convolutional Layers where each element of the list specifies the number of filters (e.g. the output dimension)
 max_pool: [False,False,False,False,False] # needs to have the same length as hidden_dimension and specifies per block if we use max pool
 kernel_size: [2,2]
@@ -13,6 +12,11 @@ mse_reduction: "sum" # possible values: sum or mean (e.g. pixelwise summed loss 
 epochs: 20
 batch_size: 64
 linear_layer_dimension: 3
+
+# data params
+data_path: "MNIST"
+resize: 28
+input_image_size: [1,28,28] # MNIST Dataset is just greyscale --> in_channels == 1
 
 
 # Some parameters what we want to log:

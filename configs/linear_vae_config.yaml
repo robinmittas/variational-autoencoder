@@ -1,13 +1,16 @@
-model: "LinearVAE"
 # model parameters
 latent_dim: 8
-input_image_size: [1,28,28] # MNIST Dataset is just greyscale --> in_channels == 1
 hidden_dimensions: [512,256,128,64]
 learning_rate: 0.001
 train_valid_split: 0.9
 epochs: 30
 KL_divergence_weight: 1 # we can set Weight for KLD loss but this one refers to Standard Linear VAE (weight=1)
 mse_reduction: "sum" # possible values: sum or mean (e.g. pixelwise summed loss or average loss)
+
+# data params
+data_path: "MNIST"
+resize: 28
+input_image_size: [1,28,28] # MNIST Dataset is just greyscale --> in_channels == 1
 
 
 # Some parameters what we want to log:

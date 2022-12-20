@@ -1,8 +1,5 @@
 # model parameters
-data_path: "MNIST" # if we just write MNIST we will use torch build in MNIST API
 latent_dimension: 8 # set to two for nice latent plot/ representations
-resize: 28 # do not resize images
-input_image_size: [1,28,28] # MNIST Dataset is just greyscale --> in_channels == 1
 hidden_dimensions: [32,64,128,256] # The hidden Dimensions basically specify the numer of convolutional Layers where each element of the list specifies the number of filters (e.g. the output dimension)
 max_pool: [False,False,False,False,False] # needs to have the same length as hidden_dimension and specifies per block if we use max pool
 kernel_size: [2,2]
@@ -10,12 +7,17 @@ stride: [2,2]
 padding: 1
 learning_rate: 0.001
 train_valid_split: 0.9
-KL_divergence_weight: 1 #0.00025
+KL_divergence_weight: 1 # referring to beta for beta-VAEs. for normal VAE set to 1
 mse_reduction: "sum" # possible values: sum or mean (e.g. pixelwise summed loss or average loss)
 epochs: 20
 batch_size: 64
 linear_layer_dimension: 3
 last_conv_layer_kernel_size: [6,6]
+
+# data params
+data_path: "MNIST" # if we just write MNIST we will use torch build in MNIST API
+resize: 28 # do not resize images
+input_image_size: [1,28,28] # MNIST Dataset is just greyscale --> in_channels == 1
 
 
 # Some parameters what we want to log:

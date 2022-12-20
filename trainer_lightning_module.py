@@ -95,21 +95,6 @@ if __name__ == "__main__":
     with open("configs/var_bayesian_config.yaml", encoding='utf8') as conf:
         config = yaml.load(conf, Loader=yaml.FullLoader)
         conf.close()
-    # use MNIST Dataset and load training and test data
-    #training_data = MNIST(root='./data', transform=transforms.ToTensor(), train=True, download=True)
-
-    #test_loader = torch.utils.data.DataLoader(
-    #    MNIST(root='./data', transform=transforms.ToTensor(), train=False, download=True),
-    #    batch_size=128,
-    #    shuffle=True)
-
-    #train_size = int(config["train_valid_split"] * len(training_data))
-    #val_size = len(training_data) - train_size
-    #train_set, val_set = torch.utils.data.random_split(training_data, [train_size, val_size])
-
-    # Load data into torch Dataloader
-    #train_loader = torch.utils.data.DataLoader(train_set, batch_size=64, shuffle=True)
-    #val_loader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=True)
 
     # transforms for training and validation sets
     transform = transforms.Compose([
@@ -117,17 +102,29 @@ if __name__ == "__main__":
         transforms.ToTensor()
     ])
 
+    # In case we want to train on MNIST, we use built in API, otherwise small workaround: Download CelebA Data and use ImageFolder instead
     if config["data_path"] == "MNIST":
         data = MNIST(root='./data', transform=transforms.ToTensor(), train=True, download=True)
+        test_loader = torch.utils.data.DataLoader(
+                                MNIST(root='./data', transform=transforms.ToTensor(), train=False, download=True),
+                                batch_size=128,
+                                shuffle=False)
     else:
         data = datasets.ImageFolder(config["data_path"], transform=transform)
 
     train_size = int(0.8 * len(data))
     val_size = len(data) - train_size
+
     train, val = torch.utils.data.random_split(data, [train_size, val_size])
+
+    if config["data_path"] != "MNIST":
+        val_size_new = int(val_size/2)
+        val, test = torch.utils.data.random_split(val, [val_size_new, val_size-val_size_new])
+        test_loader = DataLoader(test, batch_size=config["batch_size"], shuffle=False)
 
     train_loader = DataLoader(train, batch_size=config["batch_size"], shuffle=True)
     val_loader = DataLoader(val, batch_size=config["batch_size"], shuffle=True)
+
 
 
     #vae = SigmaVAE(in_channels=config["input_image_size"][0],
