@@ -25,9 +25,9 @@ Sample:
 
 Reconstructions:
 
-![](plots/128_original_beta.png)!
+![](plots/128_original_beta.png)
 
-[](plots/128_reconstructed_beta.png)
+![](plots/128_reconstructed_beta.png)
 
 
 ### 3. β-VAE (β=20, latent_dimension=256)
@@ -105,3 +105,5 @@ https://github.com/orybkin/sigma-vae-pytorch
 https://arxiv.org/pdf/1312.6114.pdf
 
 https://arxiv.org/pdf/2101.06772.pdf
+
+https://github.com/YannDubs/disentangling-vae
