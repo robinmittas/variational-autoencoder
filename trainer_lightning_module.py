@@ -77,13 +77,6 @@ class VAETrainer(pl.LightningModule):
         tensorboard.add_image(f'Sampled Images {self.current_epoch}', img_grid)
 
     def on_train_end(self) -> None:
-        interpolate_2_images(self.model,
-                             test_loader,
-                             label_1=1,
-                             label_2=3,
-                             n=12,
-                             device=self.current_device,
-                             path=self.params["plot_2_interpolate_dir"])
         standard_norm, sampled = self.model.sample(144, self.current_device)
         img_grid = utils.make_grid(sampled, nrow=12)
         vutils.save_image(img_grid.cpu().data,
