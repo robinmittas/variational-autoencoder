@@ -42,6 +42,9 @@ class VarBayesianEncoder(BaseEncoder):
         # now add two dense layer to get mu and sigma from the latent space
         self.linear1 = nn.Linear(hidden_dimensions[-1] * linear_layer_dimension**2, latent_dimension)
         self.linear2 = nn.Linear(hidden_dimensions[-1] * linear_layer_dimension**2, latent_dimension)
+        # initialize linear weights
+        nn.init.kaiming_normal_(self.linear1.weight)
+        nn.init.kaiming_normal_(self.linear2.weight)
 
     def forward(self, x: torch.Tensor) -> [torch.Tensor, ...]:
         """
@@ -124,8 +127,11 @@ class VarBayesianDecoder(BaseDecoder):
                                      kernel_size=last_conv_layer_kernel_size,
                                      stride=(1, 1),
                                      padding=0)
-        #self.tanh = nn.Tanh()
         self.sigmoid = nn.Sigmoid()
+        # initialize linear weights and weights of last layer
+        nn.init.xavier_normal_(self.linear.weight)
+        nn.init.xavier_normal_(self.final_layer.weight)
+
 
     def forward(self, x: torch.Tensor) -> [torch.Tensor, ...]:
         """

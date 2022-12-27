@@ -9,3 +9,4 @@ new.py
 logs/
 plots/gif_latent_10
 plots/gif_latent_128
+sample_.py

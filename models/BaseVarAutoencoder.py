@@ -79,6 +79,8 @@ class BaseConvBlock(nn.Module):
                                     kernel_size=kernel_size,
                                     stride=stride,
                                     padding=padding)
+        # initialize weights with Kaiming (as we have ReLU activation)
+        nn.init.kaiming_normal_(self.conv_layer.weight)
 
         if max_pool:
             self.max_pooling = nn.MaxPool2d(kernel_size=kwargs["kernel_max_pool"], stride=kwargs["stride_max_pool"])
@@ -112,6 +114,8 @@ class BaseTransposeConvBlock(nn.Module):
                                                        stride=stride,
                                                        padding=padding,
                                                        output_padding=1)
+        # initialize weights with Kaiming (as we have ReLU activation)
+        nn.init.kaiming_normal_(self.transpose_conv_layer.weight)
 
         if upsample:
             self.upsample = nn.Upsample(scale_factor=kwargs["scale_factor"])

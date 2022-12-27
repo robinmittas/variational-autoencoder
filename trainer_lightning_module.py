@@ -4,6 +4,7 @@ from torchvision import transforms, utils, datasets
 import pytorch_lightning as pl
 from models.VarBayesianAE import *
 from models.BetaVAE import *
+from models.HEBAE import *
 from models.LinearVAE import *
 from models.SigmaVAE import *
 from models.BaseVarAutoencoder import *
@@ -18,7 +19,7 @@ class VAETrainer(pl.LightningModule):
         super(VAETrainer, self).__init__()
         self.model = model
         self.params = params
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=["model"])
         self.current_device = params["devices"]
         self.current_training_step = 0
         self.valid_params = params
@@ -92,7 +93,7 @@ class VAETrainer(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    with open("configs/var_bayesian_config.yaml", encoding='utf8') as conf:
+    with open("configs/hebae_config.yaml", encoding='utf8') as conf:
         config = yaml.load(conf, Loader=yaml.FullLoader)
         conf.close()
 
@@ -137,15 +138,15 @@ if __name__ == "__main__":
     #               linear_layer_dimension=config["linear_layer_dimension"],
     #               last_conv_layer_kernel_size=config["last_conv_layer_kernel_size"])
 
-    vae = VarBayesianAE(in_channels=config["input_image_size"][0],
-                        hidden_dimensions=config["hidden_dimensions"],
-                        latent_dimension= config["latent_dimension"],
-                        kernel_size=config["kernel_size"],
-                        stride=config["stride"],
-                        padding=config["padding"],
-                        max_pool=config["max_pool"],
-                        linear_layer_dimension=config["linear_layer_dimension"],
-                        last_conv_layer_kernel_size=config["last_conv_layer_kernel_size"])
+    #vae = VarBayesianAE(in_channels=config["input_image_size"][0],
+    #                    hidden_dimensions=config["hidden_dimensions"],
+    #                    latent_dimension= config["latent_dimension"],
+    #                    kernel_size=config["kernel_size"],
+    #                    stride=config["stride"],
+    #                    padding=config["padding"],
+    #                    max_pool=config["max_pool"],
+    #                    linear_layer_dimension=config["linear_layer_dimension"],
+    #                    last_conv_layer_kernel_size=config["last_conv_layer_kernel_size"])
 
     #vae = BetaVAE(in_channels=config["input_image_size"][0],
     #              hidden_dimensions=config["hidden_dimensions"],
@@ -154,7 +155,18 @@ if __name__ == "__main__":
     #              stride=config["stride"],
     #              padding=config["padding"],
     #              max_pool=config["max_pool"],
-    #              linear_layer_dimension=config["linear_layer_dimension"])
+    #              linear_layer_dimension=config["linear_layer_dimension"],
+    #              last_conv_layer_kernel_size=config["last_conv_layer_kernel_size"])
+
+    vae = HEBAE(in_channels=config["input_image_size"][0],
+                hidden_dimensions=config["hidden_dimensions"],
+                latent_dimension=config["latent_dimension"],
+                kernel_size=config["kernel_size"],
+                stride=config["stride"],
+                padding=config["padding"],
+                max_pool=config["max_pool"],
+                linear_layer_dimension=config["linear_layer_dimension"],
+                last_conv_layer_kernel_size=config["last_conv_layer_kernel_size"])
 
     #vae = LinearVAE(input_dimension=config["input_image_size"],
     #                hidden_dimensions=config["hidden_dimensions"],

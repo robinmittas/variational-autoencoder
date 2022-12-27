@@ -12,6 +12,7 @@ mse_reduction: "sum" # possible values: sum or mean (e.g. pixelwise summed loss 
 epochs: 20
 batch_size: 64
 linear_layer_dimension: 3
+last_conv_layer_kernel_size: [6,6]
 
 # data params
 data_path: "MNIST"

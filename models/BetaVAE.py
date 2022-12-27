@@ -10,7 +10,8 @@ class BetaVAE(VarBayesianAE):
                  stride,
                  padding: int,
                  max_pool,
-                 linear_layer_dimension: int):
+                 linear_layer_dimension: int,
+                 last_conv_layer_kernel_size: [int, ...]):
         super(BetaVAE, self).__init__(in_channels=in_channels,
                                       hidden_dimensions=hidden_dimensions,
                                       latent_dimension=latent_dimension,
@@ -18,7 +19,8 @@ class BetaVAE(VarBayesianAE):
                                       stride=stride,
                                       padding=padding,
                                       max_pool=max_pool,
-                                      linear_layer_dimension=linear_layer_dimension)
+                                      linear_layer_dimension=linear_layer_dimension,
+                                      last_conv_layer_kernel_size=last_conv_layer_kernel_size)
 
 
     def loss(self, inputs: list, **kwargs) -> dict:
@@ -35,7 +37,6 @@ class BetaVAE(VarBayesianAE):
         reconstruction_loss = reconstruction_loss / kwargs["batch_size"]
 
         # for derivation of KL Term of two Std. Normals, see Appendix TODO!
-        # KL_divergence_loss = torch.mean(-0.5 * torch.sum(1 + log_sigma - mu ** 2 - log_sigma.exp(), dim=1), dim=0)
         KL_divergence_loss = -0.5 * torch.mean(1 + log_sigma - mu ** 2 - log_sigma.exp(), dim=0)
         KL_divergence_loss = torch.sum(KL_divergence_loss)
 
