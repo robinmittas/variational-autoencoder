@@ -46,7 +46,7 @@ class SigmaVAE(VarBayesianAE):
 
 
         # reconstruction loss as sum over all pixels
-        reconstruction_loss = self.gaussian_nll(reconstruction, orig_input, sigma).sum() #nn.functional.mse_loss(reconstruction, orig_input, reduction=kwargs["mse_reduction"])
+        reconstruction_loss = self.gaussian_nll(reconstruction, orig_input, sigma).sum()
         # for derivation of KL Term of two Std. Normals, see Appendix TODO!
         KL_divergence_loss = -0.5 * torch.sum(1 + log_sigma - mu.pow(2) - log_sigma.exp())
 
