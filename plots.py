@@ -86,7 +86,7 @@ def plot_2d_latent_space(autoencoder, r0=(-1, 1), r1=(-1, 1), n=50, input_dimens
     return latent_space
 
 
-def plot_latent_traversal(model, latent_dimension, first_k_dims = 20):
+def plot_latent_traversal(model, latent_dimension, output_dim, path, first_k_dims=20):
     """
     Given a model and latent dimension this function plots decoded standard normal draws when traversing them.
     That means we add per dimension a small delta to observe how the decoded image changes.
@@ -97,7 +97,7 @@ def plot_latent_traversal(model, latent_dimension, first_k_dims = 20):
     """
 
     standard_normal_samples = torch.randn(10, latent_dimension)
-    final_tensor = torch.zeros(10*first_k_dims, 3, 64, 64)
+    final_tensor = torch.zeros(10*first_k_dims, 3, output_dim, output_dim)
     for idx, delta in enumerate(torch.linspace(-3, 3, steps=20)):
         for idx_latent, latent_dim in enumerate(range(first_k_dims)):
             z = torch.zeros(10, latent_dimension)
@@ -107,31 +107,30 @@ def plot_latent_traversal(model, latent_dimension, first_k_dims = 20):
             final_tensor[10*idx_latent: 10*idx_latent + 10] = decoded
 
             vutils.save_image(final_tensor.cpu().data,
-                              f"plots/gif_latent_128/latent_dim_delta_{idx}.png",
+                              f"{path}/latent_dim_delta_{idx}.png",
                               normalize=False,
                               nrow=10)
 
     ## create a gif out of the 20 images
     images = []
-    filenames = [f"plots/gif_latent_128/latent_dim_delta_{index}.png" for index in range(idx+1)]
+    filenames = [f"{path}/latent_dim_delta_{index}.png" for index in range(idx+1)] #[f"plots/gif_latent_128/latent_dim_delta_{index}.png" for index in range(idx+1)]
     for filename in filenames:
         images.append(imageio.v2.imread(filename))
-    imageio.mimsave('plots/gif_latent_128/finalgif.gif', images)
+    imageio.mimsave(f'{path}/finalgif.gif', images)
 
     return final_tensor
 
-
 """
-plot_latent_traversal(model, 12, first_k_dims = 10)
+plot_latent_traversal(model, 2, output_dim=28, path = "plots/gif_latent_2_sigma_mnist", first_k_dims = 2)
 
 
 
-latent=plot_2d_latent_space(model.model, r0=(-1, 1), r1=(-1, 1),  n=50)
+latent=plot_2d_latent_space(model.model, r0=(-3, 3), r1=(-3, 3),  n=25)
 
 vutils.save_image(latent.cpu().data.view(-1,1,28,28),
-                  "./plots/2d_latent_space.png.png",
+                  "./plots/2d_latent_space_sigma_TEST.png",
                   normalize=True,
-                  nrow=50)
+                  nrow=25)
 
 
 
@@ -145,6 +144,8 @@ model = VAETrainer.load_from_checkpoint(path)
 checkpoint = torch.load(path)
 checkpoint
 model.load_state_dict(checkpoint["state_dict"])
+
+
 
 samples = model.model.sample(144, "cpu")
 
@@ -174,4 +175,17 @@ vutils.save_image(interpolate_list.cpu().data,
                   "./plots/standard_conv_vae_interpolate_2_numbers.png",
                   normalize=True,
                   nrow=n)
+
+
+# display a 2D plot of the digit classes in the latent space
+plt.figure(figsize=(6, 6))
+for i in range(100):
+    test_batch = next(iter(test_loader))
+    z_test = model.model.encoder(test_batch[0])
+    plt.scatter(z_test[0][:, 0].detach().numpy(), z_test[0][:, 1].detach().numpy(), c=test_batch[1],
+                alpha=.4, s=3**2, cmap='viridis')
+plt.colorbar()
+plt.show()
+
+
 """

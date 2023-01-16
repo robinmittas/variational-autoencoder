@@ -86,7 +86,7 @@ class VAETrainer(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    with open("configs/hebae_config.yaml", encoding='utf8') as conf:
+    with open("configs/sigma_vae.yaml", encoding='utf8') as conf:
         config = yaml.load(conf, Loader=yaml.FullLoader)
         conf.close()
 
