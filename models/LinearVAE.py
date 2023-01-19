@@ -95,9 +95,9 @@ class LinearVAE(BaseVarAutoencoder):
         """
         reconstruction, orig_input, latent_sample, mu, log_sigma = inputs[0], inputs[1], inputs[2], inputs[3], inputs[4]
         # use BCE or MSE
-        reconstruction_loss = F.binary_cross_entropy(reconstruction, orig_input, reduction=kwargs["mse_reduction"])
+        reconstruction_loss = F.mse_loss(reconstruction, orig_input, reduction=kwargs["mse_reduction"])
 
-        kld_loss = -0.5 * torch.sum(1 + log_sigma - mu.pow(2) - log_sigma.exp())
+        kld_loss = -0.5 * torch.sum(1 + log_sigma - mu.pow(2) - log_sigma.exp()**2)
 
         loss = reconstruction_loss + kwargs["KL_divergence_weight"] * kld_loss
         return {'total_loss': loss,

@@ -37,7 +37,7 @@ class BetaVAE(VarBayesianAE):
         reconstruction_loss = reconstruction_loss / kwargs["batch_size"]
 
         # for derivation of KL Term of two Std. Normals, see Appendix TODO!
-        KL_divergence_loss = -0.5 * torch.mean(1 + log_sigma - mu ** 2 - log_sigma.exp(), dim=0)
+        KL_divergence_loss = -0.5 * torch.mean(1 + log_sigma - mu ** 2 - (log_sigma.exp())**2, dim=0)
         KL_divergence_loss = torch.sum(KL_divergence_loss)
 
         # Add a weight to KL divergence term as the loss otherwise is too much dominated by this term!
@@ -49,6 +49,7 @@ class BetaVAE(VarBayesianAE):
                                                   1) if kwargs["scale_kld"] else 1
 
         total_loss = reconstruction_loss + kld_factor * (KL_divergence_weight * KL_divergence_loss)
+
 
         return {"total_loss": total_loss,
                 "kl_divergence_loss": KL_divergence_loss,

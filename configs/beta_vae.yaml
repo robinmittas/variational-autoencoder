@@ -1,6 +1,6 @@
 ## model parameters
-latent_dimension: 10 # set to two for nice latent plot/ representations
-hidden_dimensions: [32,64,128,256,512] # The hidden Dimensions basically specify the numer of convolutional Layers where each element of the list specifies the number of filters (e.g. the output dimension)
+latent_dimension: 2 # set to two for nice latent plot/ representations
+hidden_dimensions: [32,64,128,256] # The hidden Dimensions basically specify the numer of convolutional Layers where each element of the list specifies the number of filters (e.g. the output dimension)
 max_pool: [False,False,False,False,False] # needs to have the same length as hidden_dimension and specifies per block if we use max pool
 kernel_size: [3,3]
 stride: [2,2]
@@ -8,21 +8,24 @@ padding: 1
 learning_rate: 0.001
 train_valid_split: 0.9
 epochs: 20
-batch_size: 32
+batch_size: 64
 linear_layer_dimension: 2
-last_conv_layer_kernel_size: [1,1] # for celeba 1x1, mnist 7x7
+last_conv_layer_kernel_size: [5,5] # for celeba 1x1, mnist 5,5 (if hidden dim 32,64,128,256
 
 # data params
-data_path: "..\\torch_vae\\data\\celeba" # for linux user: "../torch_vae/data/celeba"
-resize: 64
-input_image_size: [3,64,64] # CELEBA Dataset resize to 3x64x64 due to memory issues.
+#data_path: "..\\torch_vae\\data\\celeba" # for linux user: "../torch_vae/data/celeba"
+#resize: 64
+#input_image_size: [3,64,64] # CELEBA Dataset resize to 3x64x64 due to memory issues.
+data_path: "MNIST" # for linux user: "../torch_vae/data/celeba"
+resize: 28
+input_image_size: [1,28,28] # CELEBA Dataset resize to 3x64x64 due to memory issues.
 
 
 ## loss specifications
-KL_divergence_weight: 20 # play around with KLD weight β, if >1 then we penalize the KLD more than the reconstruction loss, and vice versa
+KL_divergence_weight: 5 # play around with KLD weight β, if >1 then we penalize the KLD more than the reconstruction loss, and vice versa
 mse_reduction: "sum" # possible values: sum or mean (e.g. pixelwise summed loss or average loss)
 scale_kld: True # whether we want to scale the KLD Loss in the first K training steps so that the reconstruction term first goes down
-first_k_train_steps: 10000 # specify first k train steps to scale kld
+first_k_train_steps: 5000 # specify first k train steps to scale kld
 
 
 

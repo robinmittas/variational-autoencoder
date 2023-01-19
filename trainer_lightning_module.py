@@ -19,12 +19,16 @@ class VAETrainer(pl.LightningModule):
         super(VAETrainer, self).__init__()
         self.model = model
         self.params = params
-        self.save_hyperparameters(ignore=["model"])
+        print(self.params)
+        self.save_hyperparameters()
         self.current_device = params["devices"]
         self.current_training_step = 0
-        self.valid_params = params
+        # copy is needed as otherwise kl weight is overwritten
+        self.valid_params = params.copy()
         self.valid_params["KL_divergence_weight"] = 1
         self.valid_params["scale_kld"] = False
+        print(self.params)
+
 
     def forward(self, x):
         return self.model(x)
@@ -86,7 +90,7 @@ class VAETrainer(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    with open("configs/sigma_vae.yaml", encoding='utf8') as conf:
+    with open("configs/linear_vae_config.yaml", encoding='utf8') as conf:
         config = yaml.load(conf, Loader=yaml.FullLoader)
         conf.close()
 
@@ -117,7 +121,7 @@ if __name__ == "__main__":
         test_loader = DataLoader(test, batch_size=config["batch_size"], shuffle=False)
 
     train_loader = DataLoader(train, batch_size=config["batch_size"], shuffle=True)
-    val_loader = DataLoader(val, batch_size=config["batch_size"], shuffle=True)
+    val_loader = DataLoader(val, batch_size=config["batch_size"], shuffle=False)
 
 
 
@@ -151,19 +155,19 @@ if __name__ == "__main__":
     #              linear_layer_dimension=config["linear_layer_dimension"],
     #              last_conv_layer_kernel_size=config["last_conv_layer_kernel_size"])
 
-    vae = HEBAE(in_channels=config["input_image_size"][0],
-                hidden_dimensions=config["hidden_dimensions"],
-                latent_dimension=config["latent_dimension"],
-                kernel_size=config["kernel_size"],
-                stride=config["stride"],
-                padding=config["padding"],
-                max_pool=config["max_pool"],
-                linear_layer_dimension=config["linear_layer_dimension"],
-                last_conv_layer_kernel_size=config["last_conv_layer_kernel_size"])
+    #vae = HEBAE(in_channels=config["input_image_size"][0],
+    #            hidden_dimensions=config["hidden_dimensions"],
+    #            latent_dimension=config["latent_dimension"],
+    #            kernel_size=config["kernel_size"],
+    #            stride=config["stride"],
+    #            padding=config["padding"],
+    #            max_pool=config["max_pool"],
+    #            linear_layer_dimension=config["linear_layer_dimension"],
+    #            last_conv_layer_kernel_size=config["last_conv_layer_kernel_size"])
 
-    #vae = LinearVAE(input_dimension=config["input_image_size"],
-    #                hidden_dimensions=config["hidden_dimensions"],
-    #                latent_dim=config["latent_dim"])
+    vae = LinearVAE(input_dimension=config["input_image_size"],
+                    hidden_dimensions=config["hidden_dimensions"],
+                    latent_dim=config["latent_dimension"])
 
     tb_logger = TensorBoardLogger(save_dir=config['logging_dir'],
                                   name=config['logging_name'])

@@ -21,7 +21,7 @@ class BaseEncoder(nn.Module):
         :param logsigma: (torch.Tensor) Standard deviation of the latent Gaussian [B x D]
         :return: (torch.Tensor) [B x D] ~ N(mu, sigma) for each element in batch
         """
-        std = torch.exp(torch.mul(0.5, logsigma))
+        std = torch.exp(logsigma)
         # retrieve eps ~ N(0, sigma)
         eps = torch.randn_like(std)
         return eps * std + mu

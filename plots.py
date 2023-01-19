@@ -80,7 +80,7 @@ def plot_2d_latent_space(autoencoder, r0=(-1, 1), r1=(-1, 1), n=50, input_dimens
             latent_space[i, j] = autoencoder.decoder(z)
     latent_space = latent_space.cpu().data.view(-1, input_dimension[0], input_dimension[1], input_dimension[2])
     vutils.save_image(latent_space,
-                      "./plots/2d_latent_space.png",
+                      "./plots/2d_latent_space_MNIST.png",
                       normalize=True,
                       nrow=n)
     return latent_space
@@ -139,7 +139,7 @@ import torch
 import torchvision.utils as vutils
 
 ## check with other one
-path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\logs\\SigmaVAE\\version_10\\checkpoints\\epoch=19-step=16879.ckpt"
+path = "C:\\Users\\robin\\Desktop\\MASTER Mathematics in Data Science\\Seminar\\variational-autoencoder\\logs\\LinearVAE\\version_3\\checkpoints\\epoch=29-step=22499.ckpt"
 model = VAETrainer.load_from_checkpoint(path)
 checkpoint = torch.load(path)
 checkpoint
@@ -179,13 +179,43 @@ vutils.save_image(interpolate_list.cpu().data,
 
 # display a 2D plot of the digit classes in the latent space
 plt.figure(figsize=(6, 6))
+
+fig, ax = plt.subplots()
+colors = np.array(["blue", "olive","green", "purple", "orange",  "brown", "pink", "gray", "cyan", "red"])
+
 for i in range(100):
     test_batch = next(iter(test_loader))
+    labels = test_batch[1].numpy()
     z_test = model.model.encoder(test_batch[0])
-    plt.scatter(z_test[0][:, 0].detach().numpy(), z_test[0][:, 1].detach().numpy(), c=test_batch[1],
-                alpha=.4, s=3**2, cmap='viridis')
-plt.colorbar()
+    scatter = ax.scatter(z_test[0][:, 0].detach().numpy(), z_test[0][:, 1].detach().numpy(), c=labels,#colors[labels], #test_batch[1],
+                alpha=.4, s=3**2)#, cmap='viridis')
+
+# produce a legend with the unique colors from the scatter
+legend1 = ax.legend(*scatter.legend_elements(),
+                    loc="lower left", title="Classes")
+ax.add_artist(legend1)
+
+                    
 plt.show()
 
 
 """
+plt.figure(figsize=(6, 6))
+
+fig, ax = plt.subplots()
+colors = np.array(["blue", "olive", "green", "purple", "orange", "brown", "pink", "gray", "cyan", "red"])
+
+for i in range(100):
+    test_batch = next(iter(test_loader))
+    labels = test_batch[1].numpy()
+    z_test = vae.encoder(test_batch[0].to(device))
+    scatter = ax.scatter(z_test[:, 0].cpu().detach().numpy(), z_test[:, 1].cpu().detach().numpy(), c=labels,
+                         # colors[labels], #test_batch[1],
+                         alpha=.4, s=3 ** 2)  # , cmap='viridis')
+
+# produce a legend with the unique colors from the scatter
+legend1 = ax.legend(*scatter.legend_elements(),
+                    loc="lower left", title="Classes")
+ax.add_artist(legend1)
+
+plt.show()
