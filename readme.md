@@ -1,7 +1,10 @@
 ## Variational Autoencoder
 This repository contains code and ideas about Variational Autoencoders. 
 The current code contains an implementation of Variational Bayesian Autoencoders and its deviations, such as  β-VAE or σ-VAE. All ideas and mathematical foundations will be published in slides and in a report.
-As a Dataset I have used the MNIST Dataset 
+As a Dataset I have used the MNIST and CelebA Dataset 
+
+### Work in Progress
+The code needs to be cleaned, as well as the further implementation of some LadderVAE/ Inverse autoregressive Flows is on my Todo List.
 
 ## Samples/ reconstructions for β-VAE/ disentangled VAE on CELEBA Dataset
 ### 1. β-VAE (β=20, latent_dimension=12)
