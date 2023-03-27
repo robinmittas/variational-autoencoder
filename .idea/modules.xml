@@ -3,7 +3,10 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$USER_HOME$/OneDrive/5V/fabric-defect-detection/.idea/fabric-defect-detection.iml" filepath="$USER_HOME$/OneDrive/5V/fabric-defect-detection/.idea/fabric-defect-detection.iml" />
+      <module fileurl="file://$USER_HOME$/OneDrive/5V/investment/gptinvest/.idea/gptinvest.iml" filepath="$USER_HOME$/OneDrive/5V/investment/gptinvest/.idea/gptinvest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../App/streamlit-image-generation/.idea/streamlit-image-generation.iml" filepath="$PROJECT_DIR$/../../App/streamlit-image-generation/.idea/streamlit-image-generation.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/variational-autoencoder.iml" filepath="$PROJECT_DIR$/.idea/variational-autoencoder.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../dilab/water-inflow-forecasting/.idea/water-inflow-forecasting.iml" filepath="$PROJECT_DIR$/../../dilab/water-inflow-forecasting/.idea/water-inflow-forecasting.iml" />
     </modules>
   </component>
 </project>

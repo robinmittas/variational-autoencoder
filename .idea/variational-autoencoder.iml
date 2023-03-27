@@ -7,5 +7,8 @@
     <orderEntry type="jdk" jdkName="Python 3.9 (variational-autoencoder)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="fabric-defect-detection" />
+    <orderEntry type="module" module-name="streamlit-image-generation" />
+    <orderEntry type="module" module-name="water-inflow-forecasting" />
+    <orderEntry type="module" module-name="gptinvest" />
   </component>
 </module>
