@@ -1,7 +1,11 @@
 ## Variational Autoencoder
 This repository contains code and ideas about Variational Autoencoders. 
-The current code contains an implementation of Variational Bayesian Autoencoders and its deviations, such as  β-VAE or σ-VAE. All ideas and mathematical foundations will be published in slides and in a report.
-As a Dataset I have used the MNIST and CelebA Dataset 
+The current code contains an implementation of Variational Bayesian Autoencoders and its deviations, such as  β-VAE or σ-VAE. As a Dataset I have used the MNIST and CelebA Dataset.
+
+Please refer to the following docs:
+- Summary report of VAEs: https://github.com/robinmittas/variational-autoencoder/blob/main/Variational_Autoencoder%20Robin%20Mittas.pdf
+- Slides to my presentation about VAEs: https://github.com/robinmittas/variational-autoencoder/blob/main/presentation.pdf
+- Short handout with the most important information of my talk: https://github.com/robinmittas/variational-autoencoder/blob/main/Handout.pdf
 
 ### Work in Progress
 The code needs to be cleaned, as well as the further implementation of some LadderVAE/ Inverse autoregressive Flows is on my Todo List.
